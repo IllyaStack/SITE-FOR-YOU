@@ -57,8 +57,11 @@
     if (conf.image) {
       var img = new Image();
       img.src = conf.image;
-      img.alt = "Vorschau des Website-Konzepts " + name;
-      img.width = 1600; img.height = 1000;
+      /* Responsive: <name>-720.webp (720 px) und <name>.webp (1440 px) */
+      img.srcset = conf.image.replace(/\.webp$/, "-720.webp") + " 720w, " + conf.image + " 1440w";
+      img.sizes = card.classList.contains("project--featured") ? "(min-width: 1300px) 1130px, 100vw" : "(min-width: 720px) 50vw, 100vw";
+      img.alt = "Startseite des Website-Konzepts " + name;
+      img.width = 1440; img.height = 900;
       img.loading = card.classList.contains("project--featured") ? "eager" : "lazy";
       img.decoding = "async";
       img.onerror = function () { img.remove(); media.classList.remove("has-img"); };
