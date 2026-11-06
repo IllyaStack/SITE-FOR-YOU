@@ -17,15 +17,31 @@
   window.addEventListener("resize", onScroll);
   onScroll();
 
-  /* ---------- Reveal beim Scrollen ---------- */
+  /* ---------- Reveal beim Scrollen (wiederholt bei jedem Wiedereintritt) ----------
+     Einblenden ab 12 % Sichtbarkeit; Zurücksetzen erst, wenn das Element den
+     Viewport komplett verlassen hat (Hysterese gegen Flackern an der Kante). */
   var reveals = $$(".reveal");
   if ("IntersectionObserver" in window && !reduceMotion) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+        if (e.intersectionRatio >= 0.12) e.target.classList.add("is-in");
+        else if (!e.isIntersecting) e.target.classList.remove("is-in");
       });
-    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    }, { threshold: [0, 0.12], rootMargin: "0px 0px -40px 0px" });
     reveals.forEach(function (el) { io.observe(el); });
+
+    /* Hero-Einlaufanimation erneut abspielen, wenn man zurück nach oben scrollt */
+    if (hero) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) hero.classList.add("is-reset");
+          else if (hero.classList.contains("is-reset")) {
+            void hero.offsetWidth;
+            hero.classList.remove("is-reset");
+          }
+        });
+      }, { threshold: [0] }).observe(hero);
+    }
   } else {
     reveals.forEach(function (el) { el.classList.add("is-in"); });
   }
@@ -52,7 +68,9 @@
 
     if (conf.url) {
       link.href = conf.url;
-      link.setAttribute("aria-label", name + " – Live-Demo öffnen (neuer Tab)");
+      link.setAttribute("target", "_blank");
+      link.setAttribute("rel", "noopener noreferrer");
+      link.setAttribute("aria-label", name + " – Website-Konzept als Live-Demo öffnen (neuer Tab)");
       cta.textContent = "Live-Demo";
       card.classList.add("is-live");
     } else {
@@ -75,7 +93,7 @@
   /* ---------- Paket-Vorauswahl ---------- */
   var packages = { starter: "Starter — 300 €", business: "Business — 500 €", custom: "Custom — ab 1.000 €" };
   var select = $("#package");
-  var nameInput = $("#name");
+  var companyInput = $("#company");
 
   $$("[data-package]").forEach(function (btn) {
     btn.addEventListener("click", function (ev) {
@@ -83,18 +101,38 @@
       select.value = packages[btn.getAttribute("data-package")];
       var target = $("#kontakt");
       target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-      /* Nächster Schritt: Name-Feld fokussieren, sobald der Scroll fertig ist */
-      setTimeout(function () { nameInput.focus({ preventScroll: true }); }, reduceMotion ? 0 : 700);
+      /* Nächster Schritt: erstes Feld fokussieren, sobald der Scroll fertig ist */
+      setTimeout(function () { companyInput.focus({ preventScroll: true }); }, reduceMotion ? 0 : 700);
     });
   });
 
-  /* ---------- Formular ---------- */
+  /* ---------- Formular (Formspree, AJAX) ---------- */
   var form = $("#form");
   var submitBtn = $("#submit");
   var label = $(".btn__label", submitBtn);
   var statusEl = $("#status");
+  var nameInput = $("#name");
+  var emailInput = $("#email");
   var busy = false;
+  var attemptRef = null; /* Anfragenummer des aktuellen Versuchs; bleibt bei Wiederholung gleich */
   var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  var endpointRe = /^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/;
+
+  /* Zeilenumbrüche/Steuerzeichen entfernen (verhindert Header-Injection im Betreff) */
+  function singleLine(s, max) {
+    return String(s).replace(/[\u0000-\u001F\u007F-\u009F\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  }
+
+  /* SFY-JJJJMMTT-XXXXXXXX (8 Hex-Zeichen aus crypto.getRandomValues) */
+  function makeReference() {
+    var c = window.crypto;
+    if (!c || !c.getRandomValues) return null;
+    var b = c.getRandomValues(new Uint8Array(4));
+    var hex = Array.prototype.map.call(b, function (x) { return ("0" + x.toString(16)).slice(-2); }).join("").toUpperCase();
+    var d = new Date();
+    var p = function (n) { return ("0" + n).slice(-2); };
+    return "SFY-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + hex;
+  }
 
   function setError(input, msg) {
     var field = input.closest(".field");
@@ -104,35 +142,53 @@
   }
 
   function validate() {
-    var ok = true, first = null;
-    if (!nameInput.value.trim()) { setError(nameInput, "Bitte gib deinen Namen oder dein Unternehmen an."); first = first || nameInput; ok = false; }
-    else setError(nameInput, "");
-    var em = $("#email");
-    var v = em.value.trim();
-    if (!v) { setError(em, "Bitte gib deine E-Mail-Adresse an."); first = first || em; ok = false; }
-    else if (!emailRe.test(v)) { setError(em, "Bitte gib eine gültige E-Mail-Adresse ein."); first = first || em; ok = false; }
-    else setError(em, "");
+    var first = null;
+    function bad(input, msg) { setError(input, msg); first = first || input; }
+
+    if (!singleLine(companyInput.value, 100)) bad(companyInput, "Bitte gib den Namen deines Unternehmens an."); else setError(companyInput, "");
+    if (!singleLine(nameInput.value, 100)) bad(nameInput, "Bitte gib deinen Namen an."); else setError(nameInput, "");
+    var v = emailInput.value.trim();
+    if (!v) bad(emailInput, "Bitte gib deine E-Mail-Adresse an.");
+    else if (!emailRe.test(v)) bad(emailInput, "Bitte gib eine gültige E-Mail-Adresse ein.");
+    else setError(emailInput, "");
+
     if (first) first.focus();
-    return ok;
+    return !first;
   }
 
-  ["#name", "#email"].forEach(function (s) {
-    $(s).addEventListener("input", function () { if (this.closest(".field").classList.contains("is-invalid")) setError(this, ""); });
+  [companyInput, nameInput, emailInput].forEach(function (inp) {
+    inp.addEventListener("input", function () { if (inp.closest(".field").classList.contains("is-invalid")) setError(inp, ""); });
   });
 
-  function showStatus(type, title, html) {
+  function showStatus(type, title, text, withMail) {
     statusEl.className = "status is-visible is-" + type;
-    statusEl.innerHTML = "<strong></strong><span></span>";
-    $("strong", statusEl).textContent = title;
-    $("span", statusEl).innerHTML = html;
+    statusEl.textContent = "";
+    var strong = document.createElement("strong");
+    strong.textContent = title;
+    var span = document.createElement("span");
+    span.textContent = text;
+    statusEl.appendChild(strong);
+    statusEl.appendChild(span);
+    if (withMail && mail) {
+      span.appendChild(document.createTextNode(" Du kannst uns auch direkt schreiben: "));
+      var a = document.createElement("a");
+      a.href = "mailto:" + mail;
+      a.textContent = mail;
+      span.appendChild(a);
+      span.appendChild(document.createTextNode("."));
+    }
     void statusEl.offsetWidth;
     statusEl.classList.add("is-in");
     statusEl.focus({ preventScroll: true });
   }
   function hideStatus() { statusEl.className = "status"; statusEl.textContent = ""; }
 
-  function mailHint() {
-    return mail ? ' Du kannst uns auch direkt schreiben: <a href="mailto:' + encodeURIComponent(mail).replace("%40", "@") + '">' + mail.replace(/</g, "&lt;") + "</a>." : "";
+  function setBusy(on) {
+    busy = on;
+    submitBtn.disabled = on;
+    submitBtn.classList.toggle("is-loading", on);
+    if (on) submitBtn.setAttribute("aria-busy", "true"); else submitBtn.removeAttribute("aria-busy");
+    label.textContent = on ? "Wird gesendet" : "Anfrage senden";
   }
 
   form.addEventListener("submit", function (ev) {
@@ -141,41 +197,57 @@
     hideStatus();
     if (!validate()) return;
 
-    /* Honeypot: Bots erhalten keine Rückmeldung */
+    /* Honeypot: Bots erhalten keine Rückmeldung und es wird nichts gesendet */
     if (form.elements._gotcha && form.elements._gotcha.value) return;
 
-    if (!cfg.formEndpoint) {
-      console.warn("[SITE FOR YOU.] Kein Formular-Endpoint konfiguriert. Trage formEndpoint in config.js ein (z. B. Formspree). Es wurde nichts gesendet.");
-      showStatus("error", "Senden derzeit nicht möglich.", "Das Formular ist noch nicht eingerichtet." + mailHint());
+    var endpoint = (cfg.FORMSPREE_ENDPOINT || "").trim();
+    if (!endpointRe.test(endpoint)) {
+      console.warn("[SITE FOR YOU.] FORMSPREE_ENDPOINT fehlt oder ist ungültig (erwartet: https://formspree.io/f/FORM_ID). Es wurde nichts gesendet.");
+      showStatus("error", "Senden derzeit nicht möglich.", "Das Formular ist noch nicht eingerichtet.", true);
       return;
     }
 
-    busy = true;
-    submitBtn.disabled = true;
-    submitBtn.classList.add("is-loading");
-    submitBtn.setAttribute("aria-busy", "true");
-    label.textContent = "Wird gesendet";
+    if (!attemptRef) attemptRef = makeReference();
+    if (!attemptRef) {
+      showStatus("error", "Senden nicht möglich.", "Dein Browser unterstützt die Erstellung der Anfragenummer nicht. Bitte nutze einen aktuellen Browser.", true);
+      return;
+    }
 
-    fetch(cfg.formEndpoint, {
+    var company = singleLine(companyInput.value, 100);
+    var data = new FormData(form);
+    data.delete("_gotcha");
+    data.set("Unternehmen", company);
+    data.set("Kontaktperson", singleLine(nameInput.value, 100));
+    data.set("email", emailInput.value.trim());
+    data.set("Telefon", singleLine($("#phone").value, 40));
+    data.set("Anfragenummer", attemptRef);
+    data.set("_subject", attemptRef + " | " + company);
+
+    var sentRef = attemptRef;
+    var ctrl = "AbortController" in window ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 20000) : null;
+    setBusy(true);
+
+    fetch(endpoint, {
       method: "POST",
       headers: { Accept: "application/json" },
-      body: new FormData(form)
+      body: data,
+      signal: ctrl ? ctrl.signal : undefined
     }).then(function (res) {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json().catch(function () { return {}; });
-    }).then(function (data) {
-      if (data && data.errors) throw new Error("Provider error");
-      form.reset();
-      showStatus("success", "Danke für deine Anfrage!", "Wir melden uns persönlich bei dir. Es ist noch nichts verbindlich.");
-    }).catch(function (err) {
-      console.error("[SITE FOR YOU.] Formular-Fehler:", err);
-      showStatus("error", "Das hat leider nicht geklappt.", "Bitte versuche es gleich noch einmal." + mailHint());
+      return res.json().catch(function () { return {}; }).then(function (json) {
+        if (!res.ok || (json && (json.errors || json.ok === false))) throw new Error("Formspree HTTP " + res.status);
+      });
     }).then(function () {
-      busy = false;
-      submitBtn.disabled = false;
-      submitBtn.classList.remove("is-loading");
-      submitBtn.removeAttribute("aria-busy");
-      label.textContent = "Anfrage senden";
+      form.reset();
+      attemptRef = null;
+      showStatus("success", "Vielen Dank!", "Deine Anfrage wurde erfolgreich übermittelt. Deine Anfragenummer: " + sentRef + ". Wir melden uns persönlich bei dir.");
+    }).catch(function (err) {
+      /* Eingaben bleiben erhalten; attemptRef bleibt für den Wiederholungsversuch gleich */
+      console.error("[SITE FOR YOU.] Formular-Fehler:", err);
+      showStatus("error", "Das hat leider nicht geklappt.", "Deine Anfrage konnte nicht übermittelt werden. Deine Eingaben sind noch vorhanden – bitte versuche es erneut.", true);
+    }).then(function () {
+      if (timer) clearTimeout(timer);
+      setBusy(false);
     });
   });
 })();

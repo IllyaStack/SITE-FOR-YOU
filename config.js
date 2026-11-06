@@ -1,27 +1,25 @@
 /* ==========================================================================
    SITE FOR YOU. — zentrale Konfiguration
-   Alle Werte, die du vor der Veröffentlichung ersetzen musst, stehen hier.
+   Alle veränderlichen Werte stehen hier. Keine Geheimnisse eintragen:
+   Die Formspree-URL ist öffentlich und darf im Frontend stehen.
    ========================================================================== */
 window.SITE_CONFIG = {
-  /* FINAL DOMAIN: z. B. "https://www.siteforyou.at" (ohne Slash am Ende).
-     Wird für Open Graph / Canonical benötigt – siehe auch <head> in index.html. */
-  siteUrl: "",
+  /* Produktions-Domain (ohne Slash am Ende). */
+  siteUrl: "https://siteforyou.at",
 
-  /* DEINE ECHTE E-MAIL-ADRESSE: z. B. "hallo@siteforyou.at".
-     Wird als Alternative zum Formular angezeigt. Leer = Hinweis wird ausgeblendet. */
-  email: "",
+  /* Öffentliche Kontakt-E-Mail (Fallback bei Formularfehlern). */
+  email: "sobotovychillya@gmail.com",
 
-  /* FORMULAR-ENDPOINT: z. B. Formspree "https://formspree.io/f/xxxxxxxx".
-     Leer = Formular sendet nichts (Entwicklungshinweis in der Konsole). */
-  formEndpoint: "",
+  /* FORMSPREE_ENDPOINT — Form-URL aus dem Formspree-Dashboard:
+     https://formspree.io/f/FORM_ID
+     Leer = Formular sendet nichts und zeigt einen Fehlerhinweis. */
+  FORMSPREE_ENDPOINT: "https://formspree.io/f/mzeeqpjl",
 
-  /* PORTFOLIO: Live-Demo-URL (GitHub Pages) und Vorschaubild je Projekt.
-     url leer  = Karte ist nicht klickbar, zeigt „Demo folgt“.
-     image leer = gestalteter Platzhalter. Bild z. B. "assets/work-h11.jpg"
-     (empfohlen: 1600×1000 px, WebP/JPG, unter 200 KB). */
+  /* PORTFOLIO: Live-Demos (GitHub Pages) und optionale Vorschaubilder.
+     image leer = gestalteter Platzhalter, z. B. "assets/work-h11.jpg". */
   projects: {
-    h11:       { url: "", image: "" }, // H11 Neubau
-    hairnails: { url: "", image: "" }, // Hairnails
-    loz:       { url: "", image: "" }  // Loz
+    h11:       { url: "https://illyastack.github.io/H11-demo/",            image: "" }, // H11 Neubau
+    hairnails: { url: "https://illyastack.github.io/HairNails-demo/",      image: "" }, // Hairnails
+    loz:       { url: "https://illyastack.github.io/loz-redesign-demo/",   image: "" }  // Loz
   }
 };

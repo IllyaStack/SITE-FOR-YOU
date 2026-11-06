@@ -8,15 +8,14 @@
   <meta name="theme-color" content="#151719">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 
-  <!-- FINAL DOMAIN: Trage unten deine echte Domain ein (statt https://example.invalid),
-       sobald sie feststeht. Für das Vorschaubild ggf. assets/og-image.png (1200×630) ergänzen. -->
-  <link rel="canonical" href="https://example.invalid/">
+  <!-- Produktions-Domain: https://siteforyou.at (bei Domainwechsel hier und bei og:url anpassen). -->
+  <link rel="canonical" href="https://siteforyou.at/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="de_AT">
   <meta property="og:site_name" content="SITE FOR YOU.">
   <meta property="og:title" content="SITE FOR YOU. — Deine Website. Ganz einfach.">
   <meta property="og:description" content="Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.">
-  <meta property="og:url" content="https://example.invalid/">
+  <meta property="og:url" content="https://siteforyou.at/">
   <!-- <meta property="og:image" content="https://DEINE-DOMAIN/assets/og-image.png"> -->
   <meta name="twitter:card" content="summary">
 
@@ -224,8 +223,14 @@
           </div>
 
           <div class="field">
-            <label for="name">Name / Unternehmen</label>
-            <input id="name" name="Name" type="text" autocomplete="organization" required aria-describedby="name-err">
+            <label for="company">Unternehmen</label>
+            <input id="company" name="Unternehmen" type="text" autocomplete="organization" maxlength="100" required aria-describedby="company-err">
+            <p class="err" id="company-err" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="Kontaktperson" type="text" autocomplete="name" maxlength="100" required aria-describedby="name-err">
             <p class="err" id="name-err" role="alert"></p>
           </div>
 
@@ -236,8 +241,13 @@
           </div>
 
           <div class="field">
-            <label for="message">Nachricht <span class="opt">(optional)</span></label>
-            <textarea id="message" name="Nachricht" rows="4"></textarea>
+            <label for="phone">Telefonnummer <span class="opt">(optional)</span></label>
+            <input id="phone" name="Telefon" type="tel" inputmode="tel" autocomplete="tel" maxlength="40">
+          </div>
+
+          <div class="field">
+            <label for="message">Projektbeschreibung <span class="opt">(optional)</span></label>
+            <textarea id="message" name="Projektbeschreibung" rows="4" maxlength="3000"></textarea>
           </div>
 
           <!-- Spam-Falle: für Menschen unsichtbar -->
@@ -245,6 +255,7 @@
             <label>Nicht ausfüllen <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
           </div>
 
+          <p class="form__privacy">Wir verwenden deine Angaben ausschließlich zur Bearbeitung deiner Anfrage. Weitere Informationen findest du in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
           <button class="btn btn--dark btn--block btn--large" type="submit" id="submit">
             <span class="btn__label">Anfrage senden</span>
           </button>
