@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SITE FOR YOU. — Deine Website. Ganz einfach.</title>
+  <meta name="description" content="Moderne Websites für kleine Unternehmen in Österreich. Klare Preise ab 300 €, einfacher Ablauf, persönliche Betreuung. Webdesign-Studio aus Wien.">
+  <meta name="theme-color" content="#151719">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
+  <!-- FINAL DOMAIN: Trage unten deine echte Domain ein (statt https://example.invalid),
+       sobald sie feststeht. Für das Vorschaubild ggf. assets/og-image.png (1200×630) ergänzen. -->
+  <link rel="canonical" href="https://example.invalid/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_AT">
+  <meta property="og:site_name" content="SITE FOR YOU.">
+  <meta property="og:title" content="SITE FOR YOU. — Deine Website. Ganz einfach.">
+  <meta property="og:description" content="Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.">
+  <meta property="og:url" content="https://example.invalid/">
+  <!-- <meta property="og:image" content="https://DEINE-DOMAIN/assets/og-image.png"> -->
+  <meta name="twitter:card" content="summary">
+
+  <script>document.documentElement.classList.add("js")</script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#arbeiten">Zum Inhalt springen</a>
+
+  <header class="header" id="header">
+    <div class="wrap header__in">
+      <a class="logo" href="#top" aria-label="SITE FOR YOU. – nach oben">SITE FOR YOU.</a>
+      <a class="btn btn--small" href="#kontakt">Kontakt</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- 1. HERO -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero__in">
+        <p class="hero__meta">Webdesign-Studio</p>
+        <h1 id="hero-title" class="hero__title">
+          <span class="line"><span>Deine Website.</span></span>
+          <span class="line"><span>Ganz einfach.</span></span>
+        </h1>
+        <div class="hero__bottom">
+          <p class="hero__text">Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.</p>
+          <div class="hero__cta">
+            <a class="btn btn--light btn--large" href="#preise">Website ab 300&nbsp;€ ansehen <span aria-hidden="true" class="arrow">↓</span></a>
+            <p class="hero__loc">Wien, Österreich</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SELECTED WORK -->
+    <section class="section" id="arbeiten" aria-labelledby="work-title">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <h2 id="work-title">Ausgewählte Arbeiten.</h2>
+          <p>Drei unterschiedliche Website-Konzepte.</p>
+        </div>
+
+        <div class="work">
+          <!-- Bild/URL werden in config.js gesetzt -->
+          <article class="project project--featured reveal" data-project="h11">
+            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
+              <div class="project__media" data-ph="H11"><span class="ph-label">Vorschau folgt</span></div>
+              <div class="project__info">
+                <div>
+                  <h3>H11 Neubau</h3>
+                  <p>Restaurant · Website-Konzept</p>
+                </div>
+                <span class="project__cta" data-cta>Demo folgt</span>
+              </div>
+            </a>
+          </article>
+
+          <article class="project reveal" data-project="hairnails">
+            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
+              <div class="project__media" data-ph="Hairnails"><span class="ph-label">Vorschau folgt</span></div>
+              <div class="project__info">
+                <div>
+                  <h3>Hairnails</h3>
+                  <p>Beauty · Website-Konzept</p>
+                </div>
+                <span class="project__cta" data-cta>Demo folgt</span>
+              </div>
+            </a>
+          </article>
+
+          <article class="project reveal" data-project="loz">
+            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
+              <div class="project__media" data-ph="Loz"><span class="ph-label">Vorschau folgt</span></div>
+              <div class="project__info">
+                <div>
+                  <h3>Loz</h3>
+                  <p>Website-Konzept</p>
+                </div>
+                <span class="project__cta" data-cta>Demo folgt</span>
+              </div>
+            </a>
+          </article>
+        </div>
+        <p class="note">Gezeigte Arbeiten sind eigenständig erstellte Website-Konzepte.</p>
+      </div>
+    </section>
+
+    <!-- 3. PRICING -->
+    <section class="section section--alt" id="preise" aria-labelledby="price-title">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <h2 id="price-title">Einfach. Transparent.</h2>
+        </div>
+
+        <div class="plans">
+          <article class="plan reveal">
+            <h3 class="plan__name">Starter</h3>
+            <p class="plan__price">300&nbsp;€</p>
+            <p class="plan__desc">Alles Wichtige auf einer Seite.</p>
+            <ul class="plan__list">
+              <li>One-Page-Website</li>
+              <li>Bis zu fünf Abschnitte</li>
+              <li>Für Handy und Computer optimiert</li>
+              <li>Grundlegende Suchmaschinen-Einrichtung</li>
+              <li>Kontaktdaten bzw. Kontaktbereich</li>
+              <li>Eine Korrekturrunde</li>
+            </ul>
+            <a class="btn btn--dark btn--block" href="#kontakt" data-package="starter">Starter anfragen</a>
+          </article>
+
+          <article class="plan reveal">
+            <h3 class="plan__name">Business</h3>
+            <p class="plan__price">500&nbsp;€</p>
+            <p class="plan__desc">Mehr Platz für dein Unternehmen.</p>
+            <ul class="plan__list">
+              <li>Bis zu fünf Seiten</li>
+              <li>Für Handy und Computer optimiert</li>
+              <li>Grundlegende Suchmaschinen-Einrichtung</li>
+              <li>Kontaktbereich</li>
+              <li>Einfache Anbindungen nach Absprache</li>
+              <li>Zwei Korrekturrunden</li>
+            </ul>
+            <a class="btn btn--dark btn--block" href="#kontakt" data-package="business">Business anfragen</a>
+          </article>
+
+          <article class="plan plan--dark reveal">
+            <h3 class="plan__name">Custom</h3>
+            <p class="plan__price"><small>Ab</small> 1.000&nbsp;€</p>
+            <p class="plan__desc">Individuelle Lösungen für größere Projekte.</p>
+            <ul class="plan__list">
+              <li>Individuell geplante Website</li>
+              <li>Maßgeschneidertes Design und Funktionen</li>
+              <li>Umfang und Preis nach Anforderungen</li>
+              <li>Persönliche Projektberatung</li>
+            </ul>
+            <a class="btn btn--light btn--block" href="#kontakt" data-package="custom">Projekt anfragen</a>
+          </article>
+        </div>
+        <p class="note reveal">Einmalige Erstellungskosten. Domain und laufende Betreuung werden separat vereinbart.</p>
+      </div>
+    </section>
+
+    <!-- 4. MAINTENANCE -->
+    <section class="section" id="betreuung" aria-labelledby="care-title">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <h2 id="care-title">Website-Betreuung.</h2>
+          <p>Auf Wunsch kümmern wir uns auch nach der Veröffentlichung um deine Website.</p>
+        </div>
+
+        <div class="care">
+          <article class="care__item reveal">
+            <div class="care__top">
+              <h3>Basic Care</h3>
+              <p class="care__price">20&nbsp;€ <span>/ Monat</span></p>
+            </div>
+            <ul class="care__list">
+              <li>Hosting</li>
+              <li>SSL-Verschlüsselung</li>
+              <li>Grundlegende technische Überwachung</li>
+              <li>Backups, sofern vom Hosting unterstützt</li>
+            </ul>
+          </article>
+
+          <article class="care__item reveal">
+            <div class="care__top">
+              <h3>Premium Care</h3>
+              <p class="care__price">40&nbsp;€ <span>/ Monat</span></p>
+            </div>
+            <p class="care__plus">Alles aus Basic Care, zusätzlich:</p>
+            <ul class="care__list">
+              <li>Bis zu zwei kleine Inhaltsänderungen pro Monat</li>
+              <li>Höchstens 30 Minuten Bearbeitungszeit pro Monat</li>
+            </ul>
+          </article>
+        </div>
+        <p class="note reveal">Optionale, monatliche Leistungen – nicht im Website-Preis enthalten. Domains und weitere Entwicklungsarbeiten sind nicht automatisch inbegriffen.</p>
+      </div>
+    </section>
+
+    <!-- 5. CONTACT -->
+    <section class="contact" id="kontakt" aria-labelledby="contact-title">
+      <div class="wrap contact__in">
+        <div class="contact__intro reveal">
+          <h2 id="contact-title">Bereit für deine neue Website?</h2>
+          <p>Erzähl uns kurz von deinem Projekt. Wir melden uns persönlich bei dir.</p>
+          <p class="contact__fallback" id="mail-fallback" hidden>
+            Lieber per E-Mail? <a id="mail-link" href="#"></a>
+          </p>
+        </div>
+
+        <form class="form reveal" id="form" novalidate>
+          <div class="field">
+            <label for="package">Gewünschtes Paket</label>
+            <div class="select">
+              <select id="package" name="Paket" required>
+                <option value="Starter — 300 €">Starter — 300 €</option>
+                <option value="Business — 500 €">Business — 500 €</option>
+                <option value="Custom — ab 1.000 €">Custom — ab 1.000 €</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="name">Name / Unternehmen</label>
+            <input id="name" name="Name" type="text" autocomplete="organization" required aria-describedby="name-err">
+            <p class="err" id="name-err" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="email">E-Mail</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required aria-describedby="email-err">
+            <p class="err" id="email-err" role="alert"></p>
+          </div>
+
+          <div class="field">
+            <label for="message">Nachricht <span class="opt">(optional)</span></label>
+            <textarea id="message" name="Nachricht" rows="4"></textarea>
+          </div>
+
+          <!-- Spam-Falle: für Menschen unsichtbar -->
+          <div class="hp" aria-hidden="true">
+            <label>Nicht ausfüllen <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+          </div>
+
+          <button class="btn btn--dark btn--block btn--large" type="submit" id="submit">
+            <span class="btn__label">Anfrage senden</span>
+          </button>
+          <p class="form__hint">Unverbindliche Anfrage – es entstehen keine Kosten und kein Vertrag.</p>
+          <div class="status" id="status" role="status" aria-live="polite" tabindex="-1"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <p>© SITE FOR YOU.</p>
+      <nav aria-label="Rechtliches">
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
