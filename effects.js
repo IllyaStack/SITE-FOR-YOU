@@ -205,4 +205,30 @@
       link.addEventListener("pointerleave", reset);
     });
   })();
+
+  /* ======================================================================
+     3) Subtile zeigerabhängige Beleuchtung für Preis- & Betreuungskarten
+     Aktualisiert --mx / --my für das weichgezeichnete Halo hinter der Karte,
+     ohne den Kartentext oder Klicks zu beeinflussen.
+     ====================================================================== */
+  (function cardGlow() {
+    if (!interactive) return;
+    Array.prototype.forEach.call(document.querySelectorAll(".plan, .care__item"), function (card) {
+      var raf = 0, cx = 0, cy = 0;
+      function update() {
+        raf = 0;
+        var r = card.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        var mx = Math.min(100, Math.max(0, ((cx - r.left) / r.width) * 100));
+        var my = Math.min(100, Math.max(0, ((cy - r.top) / r.height) * 100));
+        card.style.setProperty("--mx", mx.toFixed(1) + "%");
+        card.style.setProperty("--my", my.toFixed(1) + "%");
+      }
+      card.addEventListener("pointermove", function (e) {
+        if (e.pointerType !== "mouse") return;
+        cx = e.clientX; cy = e.clientY;
+        if (!raf) raf = requestAnimationFrame(update);
+      }, { passive: true });
+    });
+  })();
 })();

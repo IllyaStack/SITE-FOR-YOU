@@ -198,6 +198,13 @@
   var panelMaint = $("#panel-maint");
   var panelUrl = $("#panel-url");
   var summaryList = $("#summary-list");
+  var sumRowEmpty = $("#sum-row-empty");
+  var sumEmptyTxt = $("#sum-empty-txt");
+  var sumRowWeb = $("#sum-row-web");
+  var sumWebVal = $("#sum-web-val");
+  var sumRowCare = $("#sum-row-care");
+  var sumCareVal = $("#sum-care-val");
+  var sumCareTag = $("#sum-care-tag");
   var selErr = $("#sel-err");
 
   var companyInput = $("#company");
@@ -216,17 +223,16 @@
     });
   }
 
-  function addSummaryRow(tag, value) {
-    var li = document.createElement("li");
-    li.className = "summary__item";
-    var valSpan = document.createElement("span");
-    valSpan.textContent = value;
-    var tagSpan = document.createElement("span");
-    tagSpan.className = "summary__tag";
-    tagSpan.textContent = tag;
-    li.appendChild(valSpan);
-    li.appendChild(tagSpan);
-    summaryList.appendChild(li);
+  function setSummaryVal(el, nextText) {
+    if (!el) return;
+    var prev = el.textContent;
+    if (prev === nextText) return;
+    el.textContent = nextText;
+    if (prev && nextText && !reduceMotion) {
+      el.classList.remove("is-swapping");
+      void el.offsetWidth;
+      el.classList.add("is-swapping");
+    }
   }
 
   function renderState() {
@@ -295,32 +301,29 @@
       selToggle.textContent = showPicker ? "Auswahl einklappen" : "Auswahl anpassen";
     }
 
-    /* 6. Zusammenfassung aktualisieren (nur relevante Einträge) */
-    if (summaryList) {
-      summaryList.textContent = "";
-      if (isMaint) {
-        if (state.carePackage) {
-          addSummaryRow("Website-Betreuung", CARE_LABELS[state.carePackage]);
-        } else {
-          var emptyM = document.createElement("li");
-          emptyM.className = "summary__empty";
-          emptyM.textContent = "Bitte wähle Basic Care oder Premium Care.";
-          summaryList.appendChild(emptyM);
-        }
-      } else {
-        if (state.websitePackage) {
-          addSummaryRow("Website", PKG_LABELS[state.websitePackage]);
-          if (state.carePackage) {
-            addSummaryRow("Betreuung", CARE_LABELS[state.carePackage]);
-          }
-        } else {
-          var emptyW = document.createElement("li");
-          emptyW.className = "summary__empty";
-          emptyW.textContent = "Bitte wähle ein Website-Paket.";
-          summaryList.appendChild(emptyW);
-        }
-      }
+    /* 6. Zusammenfassung animiert aktualisieren (jede Zeile gleitet sanft ein/aus) */
+    var showEmpty = isMaint ? !state.carePackage : !state.websitePackage;
+    var showWebRow = !isMaint && !!state.websitePackage;
+    var showCareRow = isMaint ? !!state.carePackage : (!!state.websitePackage && !!state.carePackage);
+
+    if (sumEmptyTxt) {
+      setSummaryVal(sumEmptyTxt, isMaint ? "Bitte wähle Basic Care oder Premium Care." : "Bitte wähle ein Website-Paket.");
     }
+    if (showWebRow && sumWebVal) {
+      setSummaryVal(sumWebVal, PKG_LABELS[state.websitePackage]);
+    }
+    if (showCareRow && sumCareVal) {
+      setSummaryVal(sumCareVal, CARE_LABELS[state.carePackage]);
+    }
+    if (sumCareTag) {
+      sumCareTag.textContent = isMaint ? "Website-Betreuung" : "Betreuung";
+    }
+    if (sumRowCare) {
+      sumRowCare.classList.toggle("has-top-line", showWebRow && showCareRow);
+    }
+    setCollapse(sumRowEmpty, showEmpty);
+    setCollapse(sumRowWeb, showWebRow);
+    setCollapse(sumRowCare, showCareRow);
 
     if (hasCompleteSelection && selErr) selErr.textContent = "";
   }
