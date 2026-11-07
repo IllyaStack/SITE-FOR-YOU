@@ -20,10 +20,11 @@
   <meta name="twitter:card" content="summary">
 
   <script>document.documentElement.classList.add("js")</script>
-  <link rel="stylesheet" href="styles.css">
-  <script src="config.js"></script>
-  <script src="script.js" defer></script>
-  <script src="effects.js" defer></script>
+  <!-- ?v=… : bei jeder Änderung an CSS/JS erhöhen, damit Browser nie veraltete Dateien nutzen -->
+  <link rel="stylesheet" href="styles.css?v=20261107">
+  <script src="config.js?v=20261107"></script>
+  <script src="script.js?v=20261107" defer></script>
+  <script src="effects.js?v=20261107" defer></script>
 </head>
 <body>
   <a class="skip" href="#arbeiten">Zum Inhalt springen</a>
@@ -34,6 +35,9 @@
       <a class="btn btn--small" href="#kontakt">Kontakt</a>
     </div>
   </header>
+
+  <!-- Dekorative Ebene für sanfte Tiefe bei Abschnittswechseln (keine Interaktion) -->
+  <div class="depth-veil" id="depth-veil" aria-hidden="true"></div>
 
   <main id="top">
     <!-- 1. HERO -->
@@ -55,7 +59,9 @@
       </div>
     </section>
 
-    <!-- 2. SELECTED WORK -->
+    <!-- 2. SELECTED WORK
+         Die Links stehen bewusst direkt im HTML (funktionieren ohne JavaScript und unabhängig von
+         zwischengespeicherten Dateien). config.js kann sie bei Bedarf überschreiben. -->
     <section class="section" id="arbeiten" aria-labelledby="work-title">
       <div class="wrap">
         <div class="section__head reveal">
@@ -64,42 +70,47 @@
         </div>
 
         <div class="work">
-          <!-- Bild/URL werden in config.js gesetzt -->
-          <article class="project project--featured reveal" data-project="h11">
-            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
-              <div class="project__media" data-ph="H11"><span class="ph-label">Vorschau folgt</span></div>
+          <article class="project project--featured reveal is-live" data-project="h11">
+            <a class="project__link" href="https://illyastack.github.io/H11-demo/" target="_blank" rel="noopener noreferrer" aria-label="H11 Neubau – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+              <div class="project__media has-img">
+                <img src="assets/portfolio/h11.webp" srcset="assets/portfolio/h11-720.webp 720w, assets/portfolio/h11.webp 1440w" sizes="(min-width: 1300px) 1130px, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts H11 Neubau" decoding="async">
+              </div>
               <div class="project__info">
                 <div>
                   <h3>H11 Neubau</h3>
                   <p>Restaurant · Website-Konzept</p>
                 </div>
-                <span class="project__cta" data-cta>Demo folgt</span>
+                <span class="project__cta">Live-Demo</span>
               </div>
             </a>
           </article>
 
-          <article class="project reveal" data-project="hairnails">
-            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
-              <div class="project__media" data-ph="Hairnails"><span class="ph-label">Vorschau folgt</span></div>
+          <article class="project reveal is-live" data-project="hairnails">
+            <a class="project__link" href="https://illyastack.github.io/HairNails-demo/" target="_blank" rel="noopener noreferrer" aria-label="Hairnails – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+              <div class="project__media has-img">
+                <img src="assets/portfolio/hairnails.webp" srcset="assets/portfolio/hairnails-720.webp 720w, assets/portfolio/hairnails.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Hairnails" loading="lazy" decoding="async">
+              </div>
               <div class="project__info">
                 <div>
                   <h3>Hairnails</h3>
                   <p>Beauty · Website-Konzept</p>
                 </div>
-                <span class="project__cta" data-cta>Demo folgt</span>
+                <span class="project__cta">Live-Demo</span>
               </div>
             </a>
           </article>
 
-          <article class="project reveal" data-project="loz">
-            <a class="project__link" href="#" target="_blank" rel="noopener noreferrer">
-              <div class="project__media" data-ph="Loz"><span class="ph-label">Vorschau folgt</span></div>
+          <article class="project reveal is-live" data-project="loz">
+            <a class="project__link" href="https://illyastack.github.io/loz-redesign-demo/" target="_blank" rel="noopener noreferrer" aria-label="Loz – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+              <div class="project__media has-img">
+                <img src="assets/portfolio/loz.webp" srcset="assets/portfolio/loz-720.webp 720w, assets/portfolio/loz.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Loz" loading="lazy" decoding="async">
+              </div>
               <div class="project__info">
                 <div>
                   <h3>Loz</h3>
                   <p>Website-Konzept</p>
                 </div>
-                <span class="project__cta" data-cta>Demo folgt</span>
+                <span class="project__cta">Live-Demo</span>
               </div>
             </a>
           </article>
@@ -116,7 +127,8 @@
         </div>
 
         <div class="plans">
-          <article class="plan reveal">
+          <article class="plan reveal" data-plan="starter">
+            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
             <h3 class="plan__name">Starter</h3>
             <p class="plan__price">300&nbsp;€</p>
             <p class="plan__desc">Alles Wichtige auf einer Seite.</p>
@@ -128,10 +140,11 @@
               <li>Kontaktdaten bzw. Kontaktbereich</li>
               <li>Eine Korrekturrunde</li>
             </ul>
-            <a class="btn btn--dark btn--block" href="#kontakt" data-package="starter">Starter anfragen</a>
+            <a class="btn btn--dark btn--block" href="#betreuung" data-package="starter" aria-pressed="false" role="button">Starter anfragen</a>
           </article>
 
-          <article class="plan reveal">
+          <article class="plan reveal" data-plan="business">
+            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
             <h3 class="plan__name">Business</h3>
             <p class="plan__price">500&nbsp;€</p>
             <p class="plan__desc">Mehr Platz für dein Unternehmen.</p>
@@ -143,10 +156,11 @@
               <li>Einfache Anbindungen nach Absprache</li>
               <li>Zwei Korrekturrunden</li>
             </ul>
-            <a class="btn btn--dark btn--block" href="#kontakt" data-package="business">Business anfragen</a>
+            <a class="btn btn--dark btn--block" href="#betreuung" data-package="business" aria-pressed="false" role="button">Business anfragen</a>
           </article>
 
-          <article class="plan plan--dark reveal">
+          <article class="plan plan--dark reveal" data-plan="custom">
+            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
             <h3 class="plan__name">Custom</h3>
             <p class="plan__price"><small>Ab</small> 1.000&nbsp;€</p>
             <p class="plan__desc">Individuelle Lösungen für größere Projekte.</p>
@@ -156,7 +170,7 @@
               <li>Umfang und Preis nach Anforderungen</li>
               <li>Persönliche Projektberatung</li>
             </ul>
-            <a class="btn btn--light btn--block" href="#kontakt" data-package="custom">Projekt anfragen</a>
+            <a class="btn btn--light btn--block" href="#betreuung" data-package="custom" aria-pressed="false" role="button">Projekt anfragen</a>
           </article>
         </div>
         <p class="note reveal">Einmalige Erstellungskosten. Domain und laufende Betreuung werden separat vereinbart.</p>
@@ -165,14 +179,25 @@
 
     <!-- 4. MAINTENANCE -->
     <section class="section" id="betreuung" aria-labelledby="care-title">
-      <div class="wrap">
+      <div class="wrap" id="care-wrap">
         <div class="section__head reveal">
           <h2 id="care-title">Website-Betreuung.</h2>
           <p>Auf Wunsch kümmern wir uns auch nach der Veröffentlichung um deine Website.</p>
         </div>
 
+        <!-- Erscheint nur, wenn zuvor ein Website-Paket gewählt wurde -->
+        <div class="collapse is-closed" id="care-context" inert>
+          <div class="collapse__in">
+            <div class="care-context">
+              <p class="care-context__line"><span class="care-context__check" aria-hidden="true">✓</span> Dein Website-Paket: <strong id="care-context-pkg"></strong> <a href="#preise" id="care-change">Ändern</a></p>
+              <p class="care-context__hint">Optional: Füge eine Betreuung hinzu oder fahre ohne Betreuung fort.</p>
+            </div>
+          </div>
+        </div>
+
         <div class="care">
-          <article class="care__item reveal">
+          <article class="care__item reveal" data-care-card="basic">
+            <span class="care__sel" aria-hidden="true">✓ Ausgewählt</span>
             <div class="care__top">
               <h3>Basic Care</h3>
               <p class="care__price">20&nbsp;€ <span>/ Monat</span></p>
@@ -183,10 +208,11 @@
               <li>Grundlegende technische Überwachung</li>
               <li>Backups, sofern vom Hosting unterstützt</li>
             </ul>
-            <a class="btn btn--outline care__cta" href="#kontakt" data-care="basic">Basic Care anfragen</a>
+            <a class="btn btn--outline care__cta" href="#kontakt" data-care="basic" role="button" aria-pressed="false"><span class="care__cta-label">Basic Care anfragen</span></a>
           </article>
 
-          <article class="care__item reveal">
+          <article class="care__item reveal" data-care-card="premium">
+            <span class="care__sel" aria-hidden="true">✓ Ausgewählt</span>
             <div class="care__top">
               <h3>Premium Care</h3>
               <p class="care__price">40&nbsp;€ <span>/ Monat</span></p>
@@ -196,16 +222,26 @@
               <li>Bis zu zwei kleine Inhaltsänderungen pro Monat</li>
               <li>Höchstens 30 Minuten Bearbeitungszeit pro Monat</li>
             </ul>
-            <a class="btn btn--outline care__cta" href="#kontakt" data-care="premium">Premium Care anfragen</a>
+            <a class="btn btn--outline care__cta" href="#kontakt" data-care="premium" role="button" aria-pressed="false"><span class="care__cta-label">Premium Care anfragen</span></a>
           </article>
         </div>
+
+        <!-- Nur sichtbar, wenn ein Website-Paket gewählt wurde -->
+        <div class="collapse is-closed" id="care-skip" inert>
+          <div class="collapse__in">
+            <div class="care-skip">
+              <button type="button" class="btn btn--ghost" id="skip-care">Ohne Betreuung fortfahren <span aria-hidden="true" class="arrow arrow--right">→</span></button>
+            </div>
+          </div>
+        </div>
+
         <p class="note reveal">Optionale, monatliche Leistungen – nicht im Website-Preis enthalten. Domains und weitere Entwicklungsarbeiten sind nicht automatisch inbegriffen.</p>
       </div>
     </section>
 
     <!-- 5. CONTACT -->
     <section class="contact" id="kontakt" aria-labelledby="contact-title">
-      <div class="wrap contact__in">
+      <div class="wrap contact__in" id="contact-wrap">
         <div class="contact__intro reveal">
           <h2 id="contact-title">Bereit für deine neue Website?</h2>
           <p>Erzähl uns kurz von deinem Projekt. Wir melden uns persönlich bei dir.</p>
@@ -214,33 +250,74 @@
           </p>
         </div>
 
-        <form class="form reveal" id="form" novalidate>
-          <fieldset class="choice">
+        <form class="form form-seq" id="form" novalidate>
+          <fieldset class="choice" id="fs-type">
             <legend>Was benötigst du?</legend>
             <div class="choice__grid choice__grid--2">
-              <label class="rc"><input type="radio" name="Anfrageart" value="Neue Website" checked><span class="rc__body"><span class="rc__name">Neue Website</span></span></label>
-              <label class="rc"><input type="radio" name="Anfrageart" value="Website-Betreuung"><span class="rc__body"><span class="rc__name">Website-Betreuung</span></span></label>
+              <label class="rc"><input type="radio" name="Anfrageart" value="website" checked><span class="rc__body"><span class="rc__name">Neue Website</span></span></label>
+              <label class="rc"><input type="radio" name="Anfrageart" value="maintenance"><span class="rc__body"><span class="rc__name">Website-Betreuung</span></span></label>
             </div>
           </fieldset>
 
-          <fieldset class="choice" id="fs-website">
-            <legend>Gewünschtes Paket</legend>
-            <div class="choice__grid">
-              <label class="rc"><input type="radio" name="Website-Paket" value="Starter — 300 €" checked><span class="rc__body"><span class="rc__name">Starter</span><span class="rc__price">300 €</span></span></label>
-              <label class="rc"><input type="radio" name="Website-Paket" value="Business — 500 €"><span class="rc__body"><span class="rc__name">Business</span><span class="rc__price">500 €</span></span></label>
-              <label class="rc"><input type="radio" name="Website-Paket" value="Custom — ab 1.000 €"><span class="rc__body"><span class="rc__name">Custom</span><span class="rc__price">ab 1.000 €</span></span></label>
+          <!-- Zusammenfassung der aktuellen Auswahl -->
+          <div class="summary" id="summary">
+            <div class="summary__head">
+              <span class="summary__title" id="summary-title">Deine Auswahl</span>
+              <button type="button" class="summary__toggle" id="sel-toggle" aria-expanded="true" aria-controls="sel">Schließen</button>
             </div>
-          </fieldset>
+            <ul class="summary__list" id="summary-list" aria-live="polite" aria-labelledby="summary-title"></ul>
+            <p class="err" id="sel-err" role="alert"></p>
+          </div>
 
-          <fieldset class="choice" id="fs-care">
-            <legend id="care-legend">Betreuung dazu <span class="opt">(optional)</span></legend>
-            <div class="choice__grid">
-              <label class="rc" id="opt-care-none"><input type="radio" name="Betreuung" value="Keine Betreuung" checked><span class="rc__body"><span class="rc__name">Keine Betreuung</span></span></label>
-              <label class="rc"><input type="radio" name="Betreuung" value="Basic Care — 20 €/Monat" data-care="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
-              <label class="rc"><input type="radio" name="Betreuung" value="Premium Care — 40 €/Monat" data-care="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+          <!-- Auswahlfelder (ein-/ausklappbar, ersetzen keine Formularfelder) -->
+          <div class="collapse" id="sel">
+            <div class="collapse__in">
+              <div class="collapse" id="panel-website">
+                <div class="collapse__in stack">
+                  <fieldset class="choice">
+                    <legend>Gewünschtes Paket</legend>
+                    <div class="choice__grid">
+                      <label class="rc"><input type="radio" name="w_pkg" value="starter"><span class="rc__body"><span class="rc__name">Starter</span><span class="rc__price">300 €</span></span></label>
+                      <label class="rc"><input type="radio" name="w_pkg" value="business"><span class="rc__body"><span class="rc__name">Business</span><span class="rc__price">500 €</span></span></label>
+                      <label class="rc"><input type="radio" name="w_pkg" value="custom"><span class="rc__body"><span class="rc__name">Custom</span><span class="rc__price">ab 1.000 €</span></span></label>
+                    </div>
+                  </fieldset>
+                  <fieldset class="choice">
+                    <legend>Betreuung dazu <span class="opt">(optional)</span></legend>
+                    <div class="choice__grid">
+                      <label class="rc"><input type="radio" name="w_care" value="none" checked><span class="rc__body"><span class="rc__name">Keine</span><span class="rc__price">ohne Betreuung</span></span></label>
+                      <label class="rc"><input type="radio" name="w_care" value="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="w_care" value="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+                    </div>
+                  </fieldset>
+                </div>
+              </div>
+
+              <div class="collapse is-closed" id="panel-maint" inert>
+                <div class="collapse__in stack">
+                  <fieldset class="choice">
+                    <legend>Gewünschte Betreuung</legend>
+                    <div class="choice__grid choice__grid--2">
+                      <label class="rc"><input type="radio" name="m_care" value="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="m_care" value="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+                    </div>
+                  </fieldset>
+                </div>
+              </div>
             </div>
-            <p class="choice__note" id="care-note" hidden>Die Betreuung bestehender Websites erfolgt nach technischer Prüfung.</p>
-          </fieldset>
+          </div>
+
+          <!-- Nur bei Betreuung ohne neue Website -->
+          <div class="collapse is-closed" id="panel-url" inert>
+            <div class="collapse__in stack">
+              <div class="field" id="field-url">
+                <label for="url">Bestehende Website <span class="opt">(optional)</span></label>
+                <input id="url" name="Bestehende-Website" type="url" inputmode="url" autocomplete="url" maxlength="200" placeholder="https://" aria-describedby="url-err">
+                <p class="err" id="url-err" role="alert"></p>
+              </div>
+              <p class="choice__note">Die Betreuung bestehender Websites erfolgt nach technischer Prüfung.</p>
+            </div>
+          </div>
 
           <div class="field">
             <label for="company">Unternehmen</label>
@@ -265,12 +342,6 @@
             <input id="phone" name="Telefon" type="tel" inputmode="tel" autocomplete="tel" maxlength="40">
           </div>
 
-          <div class="field" id="field-url" hidden>
-            <label for="url">Bestehende Website <span class="opt">(optional)</span></label>
-            <input id="url" name="Bestehende-Website" type="url" inputmode="url" autocomplete="url" maxlength="200" placeholder="https://" aria-describedby="url-err">
-            <p class="err" id="url-err" role="alert"></p>
-          </div>
-
           <div class="field">
             <label for="message">Projektbeschreibung <span class="opt">(optional)</span></label>
             <textarea id="message" name="Projektbeschreibung" rows="4" maxlength="3000"></textarea>
@@ -281,11 +352,13 @@
             <label>Nicht ausfüllen <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
           </div>
 
-          <p class="form__privacy">Wir verwenden deine Angaben ausschließlich zur Bearbeitung deiner Anfrage. Weitere Informationen findest du in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
-          <button class="btn btn--dark btn--block btn--large" type="submit" id="submit">
-            <span class="btn__label">Anfrage senden</span>
-          </button>
-          <p class="form__hint">Unverbindliche Anfrage – es entstehen keine Kosten und kein Vertrag.</p>
+          <div class="form__submit">
+            <p class="form__privacy">Wir verwenden deine Angaben ausschließlich zur Bearbeitung deiner Anfrage. Weitere Informationen findest du in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
+            <button class="btn btn--dark btn--block btn--large" type="submit" id="submit">
+              <span class="btn__label">Anfrage senden</span>
+            </button>
+            <p class="form__hint">Unverbindliche Anfrage – es entstehen keine Kosten und kein Vertrag.</p>
+          </div>
           <div class="status" id="status" role="status" aria-live="polite" tabindex="-1"></div>
         </form>
       </div>

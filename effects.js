@@ -9,9 +9,9 @@
   var interactive = finePointer && !reduceMotion;
 
   /* ======================================================================
-     1) Interactive Filament Field (Hero)
-     Feine Linien, die sich dem Mauszeiger elastisch annähern und danach
-     in ihre Ruheposition zurückfedern. Eine Canvas, ein Pfad, ein Stroke.
+     1) Interactive Filament Field (Hero + Header-Bereich)
+     Feine Linien ab y=0 direkt hinter dem Header, die sich dem Mauszeiger
+     elastisch annähern und danach in ihre Ruheposition zurückfedern.
      ====================================================================== */
   (function filament() {
     var canvas = document.getElementById("hero-fx");
@@ -48,8 +48,8 @@
         for (var c = 0; c < cols; c++) {
           var i = r * cols + c, x = c * step;
           restX[i] = x;
-          /* leichte, organische Grundwelle */
-          restY[i] = r * spacing + Math.sin(x * 0.0045 + r * 0.42) * 7 + Math.sin(x * 0.011 - r * 0.2) * 3;
+          /* Erste Linien laufen bereits direkt hinter dem Header (ab ~22 px) */
+          restY[i] = 22 + r * spacing + Math.sin(x * 0.0045 + r * 0.42) * 6 + Math.sin(x * 0.011 - r * 0.2) * 2.5;
         }
       }
       draw();
@@ -105,7 +105,6 @@
       draw();
       if (active || e > 0.05) rafId = requestAnimationFrame(frame);
       else {
-        /* Ruhezustand: exakt auf Ruheposition setzen und Rendering beenden */
         offX.fill(0); offY.fill(0); velX.fill(0); velY.fill(0);
         draw(); running = false;
       }
@@ -125,13 +124,20 @@
       }).observe(hero);
     } else window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(build, 120); });
 
-    if (!interactive) return;   /* Touch / reduzierte Bewegung: statisches Linienfeld */
+    if (!interactive) return;
 
-    hero.addEventListener("pointermove", function (e) {
-      if (e.pointerType !== "mouse") return;
-      pcx = e.clientX; pcy = e.clientY; active = true; start();
+    /* Auf window lauschen, damit auch Bewegungen über dem integrierten Header
+       die Fäden im oberen Hero-Bereich nahtlos ansprechen */
+    window.addEventListener("pointermove", function (e) {
+      if (e.pointerType !== "mouse" || !visible) return;
+      var rect = hero.getBoundingClientRect();
+      if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX >= rect.left && e.clientX <= rect.right) {
+        pcx = e.clientX; pcy = e.clientY; active = true; start();
+      } else if (active) {
+        active = false; start();
+      }
     }, { passive: true });
-    hero.addEventListener("pointerleave", function () { active = false; start(); });
+    document.addEventListener("mouseleave", function () { if (active) { active = false; start(); } });
 
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
@@ -145,27 +151,33 @@
   })();
 
   /* ======================================================================
-     2) 3D-Neigung der Portfolio-Vorschauen
+     2) 3D-Neigung der Portfolio-Vorschauen (Klicks vollständig bewahrt)
+     Listener liegen auf dem <a class="project__link">; die Referenz-Box wird
+     aus dem untansformierten Anker gelesen, sodass die 3D-Neigung niemals
+     den Hit-Test unter dem Mauszeiger verschiebt oder Klicks abfängt.
      ====================================================================== */
   (function tilt() {
     if (!interactive) return;
-    var MAX_DEG = 5, SCALE = 1.025;
+    var MAX_DEG = 5, SCALE = 1.024;
 
     Array.prototype.forEach.call(document.querySelectorAll(".project"), function (card) {
+      var link = card.querySelector(".project__link");
       var media = card.querySelector(".project__media");
-      if (!media) return;
+      if (!link || !media) return;
       var glare = document.createElement("span");
       glare.className = "project__glare";
       glare.setAttribute("aria-hidden", "true");
       media.appendChild(glare);
 
-      var rect = null, cx = 0, cy = 0, raf = 0;
+      var cx = 0, cy = 0, raf = 0;
 
       function apply() {
         raf = 0;
-        if (!rect) return;
+        var rect = link.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        var mediaH = media.offsetHeight || rect.height;
         var nx = Math.min(1, Math.max(0, (cx - rect.left) / rect.width));
-        var ny = Math.min(1, Math.max(0, (cy - rect.top) / rect.height));
+        var ny = Math.min(1, Math.max(0, (cy - rect.top) / mediaH));
         media.style.setProperty("--ry", ((nx - 0.5) * 2 * MAX_DEG).toFixed(2) + "deg");
         media.style.setProperty("--rx", ((0.5 - ny) * 2 * MAX_DEG).toFixed(2) + "deg");
         media.style.setProperty("--s", SCALE);
@@ -173,7 +185,6 @@
         media.style.setProperty("--gy", (ny * 100).toFixed(1) + "%");
       }
       function reset() {
-        rect = null;
         if (raf) { cancelAnimationFrame(raf); raf = 0; }
         card.classList.remove("is-tilting");
         media.style.setProperty("--rx", "0deg");
@@ -181,19 +192,17 @@
         media.style.setProperty("--s", 1);
       }
 
-      media.addEventListener("pointerenter", function (e) {
+      link.addEventListener("pointerenter", function (e) {
         if (e.pointerType !== "mouse") return;
-        rect = media.getBoundingClientRect();
         card.classList.add("is-tilting");
       });
-      media.addEventListener("pointermove", function (e) {
+      link.addEventListener("pointermove", function (e) {
         if (e.pointerType !== "mouse") return;
-        if (!rect) { rect = media.getBoundingClientRect(); card.classList.add("is-tilting"); }
+        card.classList.add("is-tilting");
         cx = e.clientX; cy = e.clientY;
         if (!raf) raf = requestAnimationFrame(apply);
       }, { passive: true });
-      media.addEventListener("pointerleave", reset);
-      window.addEventListener("scroll", function () { if (rect) rect = null; }, { passive: true });
+      link.addEventListener("pointerleave", reset);
     });
   })();
 })();

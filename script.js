@@ -6,20 +6,84 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  /* ---------- Header: solid nach dem Hero ---------- */
+  /* ---------- Header & subtiler Tiefen-Impuls bei Abschnittswechseln ---------- */
   var header = $("#header");
   var hero = $(".hero");
+  var contactSection = $("#kontakt");
+  var veil = $("#depth-veil");
+  var sectionHeads = $$(".section__head");
+  var veilTimer = 0;
+
   function onScroll() {
-    var limit = hero ? hero.offsetHeight - header.offsetHeight : 40;
-    header.classList.toggle("is-solid", window.scrollY > limit);
+    var y = window.scrollY;
+    var hh = header ? header.offsetHeight : 64;
+    var pastHero = hero ? y > hero.offsetHeight - hh - 4 : y > 40;
+    var inDarkContact = false;
+    if (contactSection && pastHero) {
+      var cr = contactSection.getBoundingClientRect();
+      inDarkContact = cr.top <= hh && cr.bottom > hh;
+    }
+    if (header) {
+      header.classList.toggle("is-solid", pastHero && !inDarkContact);
+      header.classList.toggle("is-dark-section", inDarkContact);
+    }
+    /* Sehr dezente Parallaxe der Abschnittsüberschriften */
+    if (!reduceMotion) {
+      var vh = window.innerHeight || 800;
+      for (var i = 0; i < sectionHeads.length; i++) {
+        var r = sectionHeads[i].getBoundingClientRect();
+        if (r.bottom > -100 && r.top < vh + 100) {
+          var norm = (r.top + r.height * 0.5 - vh * 0.5) / vh;
+          var py = Math.max(-7, Math.min(7, -norm * 10));
+          sectionHeads[i].style.setProperty("--py", py.toFixed(1) + "px");
+        }
+      }
+    }
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
   onScroll();
 
-  /* ---------- Reveal beim Scrollen (wiederholt bei jedem Wiedereintritt) ----------
-     Einblenden ab 12 % Sichtbarkeit; Zurücksetzen erst, wenn das Element den
-     Viewport komplett verlassen hat (Hysterese gegen Flackern an der Kante). */
+  function pulseDepth() {
+    if (!veil || reduceMotion) return;
+    clearTimeout(veilTimer);
+    veil.classList.add("is-active");
+    veilTimer = setTimeout(function () { veil.classList.remove("is-active"); }, 520);
+  }
+
+  function scrollToSection(el, afterScroll) {
+    if (!el) return;
+    pulseDepth();
+    /* Ziel-Elemente sofort einblenden, damit beim programmatischen Sprung keine Verzögerung entsteht */
+    $$(".reveal", el).forEach(function (r) { r.classList.add("is-in"); });
+    if (el.id === "kontakt" && form) form.classList.add("is-in");
+    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    if (afterScroll) setTimeout(afterScroll, reduceMotion ? 0 : 620);
+  }
+
+  /* Sanfte Übergänge auch für Header-/Hero-Ankerlinks */
+  $$('a[href^="#"]').forEach(function (a) {
+    if (a.hasAttribute("data-package") || a.hasAttribute("data-care")) return;
+    a.addEventListener("click", function (ev) {
+      var id = a.getAttribute("href");
+      if (!id || id === "#") return;
+      var target = $(id);
+      if (!target) return;
+      ev.preventDefault();
+      scrollToSection(target);
+    });
+  });
+
+  /* ---------- Reveal beim Scrollen + gestaffelter Formulareingang ---------- */
+  var form = $("#form");
+  if (form) {
+    var seqItems = $$("#form > fieldset, #form > .summary, #form > .collapse, #form > .field, #form > .form__submit");
+    seqItems.forEach(function (el, idx) {
+      el.classList.add("seq-item");
+      el.style.setProperty("--d", (idx * 45) + "ms");
+    });
+  }
+
   var reveals = $$(".reveal");
   if ("IntersectionObserver" in window && !reduceMotion) {
     var io = new IntersectionObserver(function (entries) {
@@ -30,7 +94,15 @@
     }, { threshold: [0, 0.12], rootMargin: "0px 0px -40px 0px" });
     reveals.forEach(function (el) { io.observe(el); });
 
-    /* Hero-Einlaufanimation erneut abspielen, wenn man zurück nach oben scrollt */
+    if (form) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.intersectionRatio >= 0.08) form.classList.add("is-in");
+          else if (!e.isIntersecting) form.classList.remove("is-in");
+        });
+      }, { threshold: [0, 0.08], rootMargin: "0px 0px -30px 0px" }).observe(form);
+    }
+
     if (hero) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
@@ -44,43 +116,43 @@
     }
   } else {
     reveals.forEach(function (el) { el.classList.add("is-in"); });
+    if (form) form.classList.add("is-in");
   }
 
-  /* ---------- Portfolio aus config.js ---------- */
+  /* ---------- Portfolio: Links & Bilder stehen bereits im HTML; config.js überschreibt nur bei Bedarf ---------- */
   $$(".project").forEach(function (card) {
     var conf = (cfg.projects || {})[card.getAttribute("data-project")] || {};
     var link = $(".project__link", card);
     var media = $(".project__media", card);
-    var cta = $("[data-cta]", card);
+    var cta = $(".project__cta", card);
     var name = $("h3", card).textContent;
 
     if (conf.image) {
-      var img = new Image();
-      img.src = conf.image;
-      /* Responsive: <name>-720.webp (720 px) und <name>.webp (1440 px) */
-      img.srcset = conf.image.replace(/\.webp$/, "-720.webp") + " 720w, " + conf.image + " 1440w";
-      img.sizes = card.classList.contains("project--featured") ? "(min-width: 1300px) 1130px, 100vw" : "(min-width: 720px) 50vw, 100vw";
-      img.alt = "Startseite des Website-Konzepts " + name;
-      img.width = 1440; img.height = 900;
-      img.loading = card.classList.contains("project--featured") ? "eager" : "lazy";
-      img.decoding = "async";
-      img.onerror = function () { img.remove(); media.classList.remove("has-img"); };
-      media.appendChild(img);
-      media.classList.add("has-img");
+      var existingImg = $("img", media);
+      if (!existingImg) {
+        var img = new Image();
+        img.src = conf.image;
+        img.srcset = conf.image.replace(/\.webp$/, "-720.webp") + " 720w, " + conf.image + " 1440w";
+        img.sizes = card.classList.contains("project--featured") ? "(min-width: 1300px) 1130px, 100vw" : "(min-width: 720px) 50vw, 100vw";
+        img.alt = "Startseite des Website-Konzepts " + name;
+        img.width = 1440; img.height = 900;
+        img.loading = card.classList.contains("project--featured") ? "eager" : "lazy";
+        img.decoding = "async";
+        media.appendChild(img);
+        media.classList.add("has-img");
+      } else if (existingImg.getAttribute("src") !== conf.image) {
+        existingImg.src = conf.image;
+      }
     }
 
-    if (conf.url) {
-      link.href = conf.url;
+    var finalUrl = conf.url || (link && link.getAttribute("href")) || "";
+    if (finalUrl && finalUrl !== "#") {
+      link.href = finalUrl;
       link.setAttribute("target", "_blank");
       link.setAttribute("rel", "noopener noreferrer");
       link.setAttribute("aria-label", name + " – Website-Konzept als Live-Demo öffnen (neuer Tab)");
-      cta.textContent = "Live-Demo";
+      if (cta) cta.textContent = "Live-Demo";
       card.classList.add("is-live");
-    } else {
-      /* Keine URL: kein toter Link */
-      link.removeAttribute("href");
-      link.removeAttribute("target");
-      link.removeAttribute("rel");
     }
   });
 
@@ -93,84 +165,277 @@
     $("#mail-fallback").hidden = false;
   }
 
-  /* ---------- Anfrageart, Paket- und Care-Auswahl ---------- */
+  /* ======================================================================
+     Zentrales Zustandsmodell für die Angebots-Auswahl
+     Reise: Website wählen → Betreuung (optional) → Kontaktformular
+            ODER direkt Betreuung wählen → Kontaktformular
+     ====================================================================== */
+  var PKG_LABELS = {
+    starter: "Starter — 300 €",
+    business: "Business — 500 €",
+    custom: "Custom — ab 1.000 €"
+  };
+  var CARE_LABELS = {
+    basic: "Basic Care — 20 €/Monat",
+    premium: "Premium Care — 40 €/Monat"
+  };
+
+  var state = {
+    inquiryType: "website",   /* "website" | "maintenance" */
+    websitePackage: null,     /* null | "starter" | "business" | "custom" */
+    carePackage: null,        /* null | "basic" | "premium" */
+    pickerOpen: true          /* true bis eine geführte Auswahl abgeschlossen ist */
+  };
+  window.SFY_STATE = state;
+
+  var careContext = $("#care-context");
+  var careContextPkg = $("#care-context-pkg");
+  var careSkip = $("#care-skip");
+  var skipCareBtn = $("#skip-care");
+  var selCollapse = $("#sel");
+  var selToggle = $("#sel-toggle");
+  var panelWebsite = $("#panel-website");
+  var panelMaint = $("#panel-maint");
+  var panelUrl = $("#panel-url");
+  var summaryList = $("#summary-list");
+  var selErr = $("#sel-err");
+
   var companyInput = $("#company");
+  var nameInput = $("#name");
+  var emailInput = $("#email");
   var urlInput = $("#url");
-  var fsWebsite = $("#fs-website");
-  var fsCare = $("#fs-care");
-  var careNone = $("#opt-care-none");
-  var careNoneInput = $("input", careNone);
-  var careLegend = $("#care-legend");
-  var careNote = $("#care-note");
-  var fieldUrl = $("#field-url");
-  var careLegendWebsite = careLegend.innerHTML;
 
-  function radio(name, value) {
-    return $('input[name="' + name + '"][value="' + value + '"]');
-  }
-  function checkedValue(name) {
-    var el = $('input[name="' + name + '"]:checked');
-    return el ? el.value : "";
-  }
-  function packageValue(key) {
-    return { starter: "Starter — 300 €", business: "Business — 500 €", custom: "Custom — ab 1.000 €" }[key];
+  function setCollapse(el, open) {
+    if (!el) return;
+    el.classList.toggle("is-closed", !open);
+    if (open) el.removeAttribute("inert");
+    else el.setAttribute("inert", "");
+    $$("input, button, select, textarea, a", el).forEach(function (ctrl) {
+      if (open) ctrl.removeAttribute("tabindex");
+      else ctrl.setAttribute("tabindex", "-1");
+    });
   }
 
-  /* Blendet die zur Anfrageart passenden Optionen ein/aus (ohne Neuladen) */
-  function syncType() {
-    var maintenance = checkedValue("Anfrageart") === "Website-Betreuung";
-    fsWebsite.hidden = maintenance;
-    fsWebsite.disabled = maintenance;      /* deaktivierte Felder werden nicht gesendet */
-    fieldUrl.hidden = !maintenance;
-    careNote.hidden = !maintenance;
-    careNone.hidden = maintenance;
-    careNoneInput.disabled = maintenance;
-    if (maintenance) {
-      careLegend.textContent = "Gewünschte Betreuung";
-      if (careNoneInput.checked) radio("Betreuung", "Basic Care — 20 €/Monat").checked = true;
-    } else {
-      careLegend.innerHTML = careLegendWebsite;
-      setError(urlInput, "");
+  function addSummaryRow(tag, value) {
+    var li = document.createElement("li");
+    li.className = "summary__item";
+    var valSpan = document.createElement("span");
+    valSpan.textContent = value;
+    var tagSpan = document.createElement("span");
+    tagSpan.className = "summary__tag";
+    tagSpan.textContent = tag;
+    li.appendChild(valSpan);
+    li.appendChild(tagSpan);
+    summaryList.appendChild(li);
+  }
+
+  function renderState() {
+    var isMaint = state.inquiryType === "maintenance";
+    var hasWebsite = !isMaint && !!state.websitePackage;
+
+    /* 1. Preiskarten markieren */
+    $$("[data-plan]").forEach(function (card) {
+      var key = card.getAttribute("data-plan");
+      var sel = !isMaint && state.websitePackage === key;
+      card.classList.toggle("is-selected", sel);
+      var btn = $("[data-package]", card);
+      if (btn) btn.setAttribute("aria-pressed", sel ? "true" : "false");
+    });
+
+    /* 2. Betreuungskarten + Kontext-Banner + Ohne-Betreuung-Button */
+    setCollapse(careContext, hasWebsite);
+    setCollapse(careSkip, hasWebsite);
+    if (hasWebsite && careContextPkg) {
+      careContextPkg.textContent = PKG_LABELS[state.websitePackage] || "";
     }
-  }
-  $$('input[name="Anfrageart"]').forEach(function (r) { r.addEventListener("change", syncType); });
-  syncType();
 
-  function goToContact() {
-    $("#kontakt").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-    /* Nächster Schritt: erstes Feld fokussieren, sobald der Scroll fertig ist */
-    setTimeout(function () { companyInput.focus({ preventScroll: true }); }, reduceMotion ? 0 : 700);
+    $$("[data-care-card]").forEach(function (card) {
+      var key = card.getAttribute("data-care-card");
+      var sel = state.carePackage === key;
+      card.classList.toggle("is-selected", sel);
+      var btn = $("a[data-care]", card);
+      var lbl = $(".care__cta-label", card);
+      if (btn) btn.setAttribute("aria-pressed", sel ? "true" : "false");
+      if (lbl) {
+        var baseName = key === "basic" ? "Basic Care" : "Premium Care";
+        lbl.textContent = hasWebsite ? (baseName + " hinzufügen") : (baseName + " anfragen");
+      }
+    });
+
+    /* 3. Anfrageart-Radios im Formular */
+    $$('input[name="Anfrageart"]').forEach(function (r) {
+      r.checked = (r.value === state.inquiryType);
+    });
+
+    /* 4. Paket- & Care-Radios im Formular */
+    $$('input[name="w_pkg"]').forEach(function (r) {
+      r.checked = (!isMaint && r.value === state.websitePackage);
+    });
+    var wCareVal = (!isMaint && state.carePackage) ? state.carePackage : "none";
+    $$('input[name="w_care"]').forEach(function (r) {
+      r.checked = (r.value === wCareVal);
+    });
+    $$('input[name="m_care"]').forEach(function (r) {
+      r.checked = (isMaint && r.value === state.carePackage);
+    });
+
+    /* 5. Sanftes Umschalten der Formular-Panels */
+    var hasCompleteSelection = isMaint ? !!state.carePackage : !!state.websitePackage;
+    var showPicker = state.pickerOpen || !hasCompleteSelection;
+
+    setCollapse(selCollapse, showPicker);
+    setCollapse(panelWebsite, showPicker && !isMaint);
+    setCollapse(panelMaint, showPicker && isMaint);
+    setCollapse(panelUrl, isMaint);
+
+    if (!isMaint && urlInput) setError(urlInput, "");
+
+    if (selToggle) {
+      selToggle.setAttribute("aria-expanded", showPicker ? "true" : "false");
+      selToggle.textContent = showPicker ? "Auswahl einklappen" : "Auswahl anpassen";
+    }
+
+    /* 6. Zusammenfassung aktualisieren (nur relevante Einträge) */
+    if (summaryList) {
+      summaryList.textContent = "";
+      if (isMaint) {
+        if (state.carePackage) {
+          addSummaryRow("Website-Betreuung", CARE_LABELS[state.carePackage]);
+        } else {
+          var emptyM = document.createElement("li");
+          emptyM.className = "summary__empty";
+          emptyM.textContent = "Bitte wähle Basic Care oder Premium Care.";
+          summaryList.appendChild(emptyM);
+        }
+      } else {
+        if (state.websitePackage) {
+          addSummaryRow("Website", PKG_LABELS[state.websitePackage]);
+          if (state.carePackage) {
+            addSummaryRow("Betreuung", CARE_LABELS[state.carePackage]);
+          }
+        } else {
+          var emptyW = document.createElement("li");
+          emptyW.className = "summary__empty";
+          emptyW.textContent = "Bitte wähle ein Website-Paket.";
+          summaryList.appendChild(emptyW);
+        }
+      }
+    }
+
+    if (hasCompleteSelection && selErr) selErr.textContent = "";
   }
 
+  /* 3.1 Klick auf Website-Paket → speichern & zur Website-Betreuung scrollen */
   $$("[data-package]").forEach(function (btn) {
     btn.addEventListener("click", function (ev) {
       ev.preventDefault();
-      /* Kam man aus der Betreuungs-Anfrage, nicht automatisch Betreuung mitbuchen */
-      if (checkedValue("Anfrageart") === "Website-Betreuung") careNoneInput.checked = true;
-      radio("Anfrageart", "Neue Website").checked = true;
-      radio("Website-Paket", packageValue(btn.getAttribute("data-package"))).checked = true;
-      syncType();
-      goToContact();
+      state.inquiryType = "website";
+      state.websitePackage = btn.getAttribute("data-package");
+      state.carePackage = null;
+      state.pickerOpen = false;
+      renderState();
+      scrollToSection($("#betreuung"));
     });
   });
 
+  /* Link „Ändern“ im Betreuungs-Kontextbanner */
+  var careChange = $("#care-change");
+  if (careChange) {
+    careChange.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      scrollToSection($("#preise"));
+    });
+  }
+
+  /* 3.2 & 3.4 Klick auf Basic Care / Premium Care in der Betreuungs-Sektion */
   $$("a[data-care]").forEach(function (btn) {
     btn.addEventListener("click", function (ev) {
       ev.preventDefault();
-      radio("Anfrageart", "Website-Betreuung").checked = true;
-      syncType();
-      $('input[data-care="' + btn.getAttribute("data-care") + '"]').checked = true;
-      goToContact();
+      var careKey = btn.getAttribute("data-care");
+      if (state.websitePackage) {
+        /* Zuvor wurde eine Website gewählt → Website + Betreuung kombinieren */
+        state.inquiryType = "website";
+        state.carePackage = careKey;
+      } else {
+        /* Direkt Betreuung gewählt → nur Website-Betreuung (ohne Starter!) */
+        state.inquiryType = "maintenance";
+        state.websitePackage = null;
+        state.carePackage = careKey;
+      }
+      state.pickerOpen = false;
+      renderState();
+      scrollToSection($("#kontakt"), function () {
+        if (!companyInput.value) companyInput.focus({ preventScroll: true });
+      });
     });
   });
 
+  /* 3.3 Klick auf „Ohne Betreuung fortfahren“ */
+  if (skipCareBtn) {
+    skipCareBtn.addEventListener("click", function () {
+      state.inquiryType = "website";
+      state.carePackage = null;
+      state.pickerOpen = false;
+      renderState();
+      scrollToSection($("#kontakt"), function () {
+        if (!companyInput.value) companyInput.focus({ preventScroll: true });
+      });
+    });
+  }
+
+  /* Ein-/Ausklappen der Auswahl im Formular (ohne Scroll-Auslösung) */
+  if (selToggle) {
+    selToggle.addEventListener("click", function () {
+      state.pickerOpen = !state.pickerOpen;
+      renderState();
+    });
+  }
+
+  /* Manuelle Änderungen direkt im Formular (lösen kein automatisches Scrollen aus) */
+  $$('input[name="Anfrageart"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      if (!r.checked) return;
+      state.inquiryType = r.value;
+      if (state.inquiryType === "maintenance") {
+        if (!state.carePackage) state.carePackage = "basic";
+      }
+      state.pickerOpen = true;
+      renderState();
+    });
+  });
+
+  $$('input[name="w_pkg"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      if (!r.checked) return;
+      state.inquiryType = "website";
+      state.websitePackage = r.value;
+      renderState();
+    });
+  });
+
+  $$('input[name="w_care"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      if (!r.checked) return;
+      state.carePackage = r.value === "none" ? null : r.value;
+      renderState();
+    });
+  });
+
+  $$('input[name="m_care"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      if (!r.checked) return;
+      state.inquiryType = "maintenance";
+      state.carePackage = r.value;
+      renderState();
+    });
+  });
+
+  renderState();
+
   /* ---------- Formular (Formspree, AJAX) ---------- */
-  var form = $("#form");
   var submitBtn = $("#submit");
   var label = $(".btn__label", submitBtn);
   var statusEl = $("#status");
-  var nameInput = $("#name");
-  var emailInput = $("#email");
   var busy = false;
   var attemptRef = null; /* Anfragenummer des aktuellen Versuchs; bleibt bei Wiederholung gleich */
   var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -194,6 +459,7 @@
 
   function setError(input, msg) {
     var field = input.closest(".field");
+    if (!field) return;
     $(".err", field).textContent = msg;
     field.classList.toggle("is-invalid", !!msg);
     if (msg) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
@@ -203,15 +469,30 @@
     var first = null;
     function bad(input, msg) { setError(input, msg); first = first || input; }
 
+    /* Auswahl prüfen */
+    if (state.inquiryType === "website" && !state.websitePackage) {
+      state.pickerOpen = true;
+      renderState();
+      if (selErr) selErr.textContent = "Bitte wähle ein Website-Paket aus.";
+      first = first || $('input[name="w_pkg"]');
+    } else if (state.inquiryType === "maintenance" && !state.carePackage) {
+      state.pickerOpen = true;
+      renderState();
+      if (selErr) selErr.textContent = "Bitte wähle Basic Care oder Premium Care aus.";
+      first = first || $('input[name="m_care"]');
+    } else if (selErr) {
+      selErr.textContent = "";
+    }
+
     if (!singleLine(companyInput.value, 100)) bad(companyInput, "Bitte gib den Namen deines Unternehmens an."); else setError(companyInput, "");
-    if (!singleLine(nameInput.value, 100)) bad(nameInput, "Bitte gib deinen Namen an."); else setError(nameInput, "");
+    if (!singleLine(nameInput.value, 100)) bad(nameInput, "Bitte gib deinen Namen an."); else setError(companyInput === first ? nameInput : nameInput, "");
     var v = emailInput.value.trim();
     if (!v) bad(emailInput, "Bitte gib deine E-Mail-Adresse an.");
     else if (!emailRe.test(v)) bad(emailInput, "Bitte gib eine gültige E-Mail-Adresse ein.");
     else setError(emailInput, "");
 
     /* Bestehende Website (nur Betreuung, optional) */
-    if (!fieldUrl.hidden && urlInput.value.trim() && !normalizeUrl(urlInput.value)) {
+    if (state.inquiryType === "maintenance" && urlInput.value.trim() && !normalizeUrl(urlInput.value)) {
       bad(urlInput, "Bitte gib eine gültige Adresse ein, z. B. https://beispiel.at");
     } else setError(urlInput, "");
 
@@ -289,22 +570,23 @@
     }
 
     var company = singleLine(companyInput.value, 100);
-    var data = new FormData(form);
-    data.delete("_gotcha");
+    var isMaint = state.inquiryType === "maintenance";
+    var data = new FormData();
+    data.set("Anfragenummer", attemptRef);
+    data.set("Anfrageart", isMaint ? "Website-Betreuung" : "Neue Website");
+    if (!isMaint && state.websitePackage) {
+      data.set("Website-Paket", PKG_LABELS[state.websitePackage]);
+    }
+    data.set("Betreuung", state.carePackage ? CARE_LABELS[state.carePackage] : "Keine Betreuung");
+    if (isMaint && urlInput.value.trim()) {
+      data.set("Bestehende-Website", normalizeUrl(urlInput.value));
+    }
     data.set("Unternehmen", company);
     data.set("Kontaktperson", singleLine(nameInput.value, 100));
     data.set("email", emailInput.value.trim());
-    data.set("Telefon", singleLine($("#phone").value, 40));
-    var maintenance = checkedValue("Anfrageart") === "Website-Betreuung";
-    data.set("Anfrageart", checkedValue("Anfrageart"));
-    data.delete("Website-Paket");
-    data.delete("Betreuung");
-    data.delete("Bestehende-Website");
-    if (!maintenance) data.set("Website-Paket", checkedValue("Website-Paket"));
-    data.set("Betreuung", checkedValue("Betreuung") || "Keine Betreuung");
-    if (maintenance && urlInput.value.trim()) data.set("Bestehende-Website", normalizeUrl(urlInput.value));
-    if (!data.get("Telefon")) data.delete("Telefon");
-    data.set("Anfragenummer", attemptRef);
+    var phoneVal = singleLine($("#phone").value, 40);
+    if (phoneVal) data.set("Telefon", phoneVal);
+    data.set("Projektbeschreibung", ($("#message").value || "").trim());
     data.set("_subject", attemptRef + " | " + company);
 
     var sentRef = attemptRef;
@@ -323,7 +605,11 @@
       });
     }).then(function () {
       form.reset();
-      syncType();
+      state.inquiryType = "website";
+      state.websitePackage = null;
+      state.carePackage = null;
+      state.pickerOpen = true;
+      renderState();
       attemptRef = null;
       showStatus("success", "Vielen Dank!", "Deine Anfrage wurde erfolgreich übermittelt. Deine Anfragenummer: " + sentRef + ". Wir melden uns persönlich bei dir.");
     }).catch(function (err) {
