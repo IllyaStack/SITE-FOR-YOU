@@ -93,19 +93,74 @@
     $("#mail-fallback").hidden = false;
   }
 
-  /* ---------- Paket-Vorauswahl ---------- */
-  var packages = { starter: "Starter — 300 €", business: "Business — 500 €", custom: "Custom — ab 1.000 €" };
-  var select = $("#package");
+  /* ---------- Anfrageart, Paket- und Care-Auswahl ---------- */
   var companyInput = $("#company");
+  var urlInput = $("#url");
+  var fsWebsite = $("#fs-website");
+  var fsCare = $("#fs-care");
+  var careNone = $("#opt-care-none");
+  var careNoneInput = $("input", careNone);
+  var careLegend = $("#care-legend");
+  var careNote = $("#care-note");
+  var fieldUrl = $("#field-url");
+  var careLegendWebsite = careLegend.innerHTML;
+
+  function radio(name, value) {
+    return $('input[name="' + name + '"][value="' + value + '"]');
+  }
+  function checkedValue(name) {
+    var el = $('input[name="' + name + '"]:checked');
+    return el ? el.value : "";
+  }
+  function packageValue(key) {
+    return { starter: "Starter — 300 €", business: "Business — 500 €", custom: "Custom — ab 1.000 €" }[key];
+  }
+
+  /* Blendet die zur Anfrageart passenden Optionen ein/aus (ohne Neuladen) */
+  function syncType() {
+    var maintenance = checkedValue("Anfrageart") === "Website-Betreuung";
+    fsWebsite.hidden = maintenance;
+    fsWebsite.disabled = maintenance;      /* deaktivierte Felder werden nicht gesendet */
+    fieldUrl.hidden = !maintenance;
+    careNote.hidden = !maintenance;
+    careNone.hidden = maintenance;
+    careNoneInput.disabled = maintenance;
+    if (maintenance) {
+      careLegend.textContent = "Gewünschte Betreuung";
+      if (careNoneInput.checked) radio("Betreuung", "Basic Care — 20 €/Monat").checked = true;
+    } else {
+      careLegend.innerHTML = careLegendWebsite;
+      setError(urlInput, "");
+    }
+  }
+  $$('input[name="Anfrageart"]').forEach(function (r) { r.addEventListener("change", syncType); });
+  syncType();
+
+  function goToContact() {
+    $("#kontakt").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    /* Nächster Schritt: erstes Feld fokussieren, sobald der Scroll fertig ist */
+    setTimeout(function () { companyInput.focus({ preventScroll: true }); }, reduceMotion ? 0 : 700);
+  }
 
   $$("[data-package]").forEach(function (btn) {
     btn.addEventListener("click", function (ev) {
       ev.preventDefault();
-      select.value = packages[btn.getAttribute("data-package")];
-      var target = $("#kontakt");
-      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-      /* Nächster Schritt: erstes Feld fokussieren, sobald der Scroll fertig ist */
-      setTimeout(function () { companyInput.focus({ preventScroll: true }); }, reduceMotion ? 0 : 700);
+      /* Kam man aus der Betreuungs-Anfrage, nicht automatisch Betreuung mitbuchen */
+      if (checkedValue("Anfrageart") === "Website-Betreuung") careNoneInput.checked = true;
+      radio("Anfrageart", "Neue Website").checked = true;
+      radio("Website-Paket", packageValue(btn.getAttribute("data-package"))).checked = true;
+      syncType();
+      goToContact();
+    });
+  });
+
+  $$("a[data-care]").forEach(function (btn) {
+    btn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      radio("Anfrageart", "Website-Betreuung").checked = true;
+      syncType();
+      $('input[data-care="' + btn.getAttribute("data-care") + '"]').checked = true;
+      goToContact();
     });
   });
 
@@ -155,11 +210,28 @@
     else if (!emailRe.test(v)) bad(emailInput, "Bitte gib eine gültige E-Mail-Adresse ein.");
     else setError(emailInput, "");
 
+    /* Bestehende Website (nur Betreuung, optional) */
+    if (!fieldUrl.hidden && urlInput.value.trim() && !normalizeUrl(urlInput.value)) {
+      bad(urlInput, "Bitte gib eine gültige Adresse ein, z. B. https://beispiel.at");
+    } else setError(urlInput, "");
+
     if (first) first.focus();
     return !first;
   }
 
-  [companyInput, nameInput, emailInput].forEach(function (inp) {
+  /* Gibt eine bereinigte http(s)-URL zurück oder "" bei ungültiger Eingabe */
+  function normalizeUrl(raw) {
+    var s = singleLine(raw, 200).replace(/\s/g, "");
+    if (!s) return "";
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) s = "https://" + s;
+    try {
+      var u = new URL(s);
+      if ((u.protocol !== "http:" && u.protocol !== "https:") || u.hostname.indexOf(".") < 1 || /\.$/.test(u.hostname)) return "";
+      return u.href;
+    } catch (e) { return ""; }
+  }
+
+  [companyInput, nameInput, emailInput, urlInput].forEach(function (inp) {
     inp.addEventListener("input", function () { if (inp.closest(".field").classList.contains("is-invalid")) setError(inp, ""); });
   });
 
@@ -223,6 +295,15 @@
     data.set("Kontaktperson", singleLine(nameInput.value, 100));
     data.set("email", emailInput.value.trim());
     data.set("Telefon", singleLine($("#phone").value, 40));
+    var maintenance = checkedValue("Anfrageart") === "Website-Betreuung";
+    data.set("Anfrageart", checkedValue("Anfrageart"));
+    data.delete("Website-Paket");
+    data.delete("Betreuung");
+    data.delete("Bestehende-Website");
+    if (!maintenance) data.set("Website-Paket", checkedValue("Website-Paket"));
+    data.set("Betreuung", checkedValue("Betreuung") || "Keine Betreuung");
+    if (maintenance && urlInput.value.trim()) data.set("Bestehende-Website", normalizeUrl(urlInput.value));
+    if (!data.get("Telefon")) data.delete("Telefon");
     data.set("Anfragenummer", attemptRef);
     data.set("_subject", attemptRef + " | " + company);
 
@@ -242,6 +323,7 @@
       });
     }).then(function () {
       form.reset();
+      syncType();
       attemptRef = null;
       showStatus("success", "Vielen Dank!", "Deine Anfrage wurde erfolgreich übermittelt. Deine Anfragenummer: " + sentRef + ". Wir melden uns persönlich bei dir.");
     }).catch(function (err) {

@@ -15,7 +15,8 @@ Dann `http://localhost:8000` öffnen (oder `index.html` direkt öffnen).
 |---|---|
 | `index.html` | Seite (Texte, Struktur, Meta-Tags, Canonical/Open Graph) |
 | `styles.css` | Design |
-| `script.js` | Paketauswahl, Formular, Animationen |
+| `script.js` | Anfrageart/Paket/Care-Auswahl, Formular, Scroll-Animationen |
+| `effects.js` | Filament-Hero (Canvas) und 3D-Neigung der Portfolio-Karten |
 | `config.js` | **Zentrale Einstellungen** (`FORMSPREE_ENDPOINT`, Demo-URLs, E-Mail) |
 | `impressum.html`, `datenschutz.html` | Rechtstexte |
 | `assets/` | Favicon, optionale Vorschaubilder |
@@ -23,6 +24,7 @@ Dann `http://localhost:8000` öffnen (oder `index.html` direkt öffnen).
 ## Kontaktformular (Formspree)
 
 - Endpoint: `config.js` → **`FORMSPREE_ENDPOINT`** (`https://formspree.io/f/FORM_ID`). Die Form-ID ist öffentlich; es gehören keine Passwörter oder API-Schlüssel ins Repository.
+- Übermittelte Felder: `Anfrageart` (Neue Website / Website-Betreuung), `Website-Paket` (nur bei neuer Website), `Betreuung`, `Bestehende-Website` (nur bei Betreuung, optional), `Unternehmen`, `Kontaktperson`, `email`, `Telefon` (falls angegeben), `Projektbeschreibung`, `Anfragenummer`, `_subject`.
 - Das Feld `email` setzt bei Formspree den Reply-To-Header. `_subject` setzt den Betreff: `SFY-JJJJMMTT-XXXXXXXX | Unternehmen`.
 - Die Anfragenummer wird im Browser mit `crypto.getRandomValues` erzeugt (kein fortlaufender Zähler) und bei einem Wiederholungsversuch nach Fehler beibehalten.
 - Spam-Schutz: Honeypot-Feld `_gotcha`; zusätzlich in Formspree „reCAPTCHA“ bzw. Spam-Filter nach Bedarf aktivieren.

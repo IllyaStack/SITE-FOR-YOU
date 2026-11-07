@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="config.js"></script>
   <script src="script.js" defer></script>
+  <script src="effects.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#arbeiten">Zum Inhalt springen</a>
@@ -37,6 +38,7 @@
   <main id="top">
     <!-- 1. HERO -->
     <section class="hero" aria-labelledby="hero-title">
+      <canvas class="hero__fx" id="hero-fx" aria-hidden="true"></canvas>
       <div class="wrap hero__in">
         <p class="hero__meta">Webdesign-Studio</p>
         <h1 id="hero-title" class="hero__title">
@@ -181,6 +183,7 @@
               <li>Grundlegende technische Überwachung</li>
               <li>Backups, sofern vom Hosting unterstützt</li>
             </ul>
+            <a class="btn btn--outline care__cta" href="#kontakt" data-care="basic">Basic Care anfragen</a>
           </article>
 
           <article class="care__item reveal">
@@ -193,6 +196,7 @@
               <li>Bis zu zwei kleine Inhaltsänderungen pro Monat</li>
               <li>Höchstens 30 Minuten Bearbeitungszeit pro Monat</li>
             </ul>
+            <a class="btn btn--outline care__cta" href="#kontakt" data-care="premium">Premium Care anfragen</a>
           </article>
         </div>
         <p class="note reveal">Optionale, monatliche Leistungen – nicht im Website-Preis enthalten. Domains und weitere Entwicklungsarbeiten sind nicht automatisch inbegriffen.</p>
@@ -211,16 +215,32 @@
         </div>
 
         <form class="form reveal" id="form" novalidate>
-          <div class="field">
-            <label for="package">Gewünschtes Paket</label>
-            <div class="select">
-              <select id="package" name="Paket" required>
-                <option value="Starter — 300 €">Starter — 300 €</option>
-                <option value="Business — 500 €">Business — 500 €</option>
-                <option value="Custom — ab 1.000 €">Custom — ab 1.000 €</option>
-              </select>
+          <fieldset class="choice">
+            <legend>Was benötigst du?</legend>
+            <div class="choice__grid choice__grid--2">
+              <label class="rc"><input type="radio" name="Anfrageart" value="Neue Website" checked><span class="rc__body"><span class="rc__name">Neue Website</span></span></label>
+              <label class="rc"><input type="radio" name="Anfrageart" value="Website-Betreuung"><span class="rc__body"><span class="rc__name">Website-Betreuung</span></span></label>
             </div>
-          </div>
+          </fieldset>
+
+          <fieldset class="choice" id="fs-website">
+            <legend>Gewünschtes Paket</legend>
+            <div class="choice__grid">
+              <label class="rc"><input type="radio" name="Website-Paket" value="Starter — 300 €" checked><span class="rc__body"><span class="rc__name">Starter</span><span class="rc__price">300 €</span></span></label>
+              <label class="rc"><input type="radio" name="Website-Paket" value="Business — 500 €"><span class="rc__body"><span class="rc__name">Business</span><span class="rc__price">500 €</span></span></label>
+              <label class="rc"><input type="radio" name="Website-Paket" value="Custom — ab 1.000 €"><span class="rc__body"><span class="rc__name">Custom</span><span class="rc__price">ab 1.000 €</span></span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice" id="fs-care">
+            <legend id="care-legend">Betreuung dazu <span class="opt">(optional)</span></legend>
+            <div class="choice__grid">
+              <label class="rc" id="opt-care-none"><input type="radio" name="Betreuung" value="Keine Betreuung" checked><span class="rc__body"><span class="rc__name">Keine Betreuung</span></span></label>
+              <label class="rc"><input type="radio" name="Betreuung" value="Basic Care — 20 €/Monat" data-care="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
+              <label class="rc"><input type="radio" name="Betreuung" value="Premium Care — 40 €/Monat" data-care="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+            </div>
+            <p class="choice__note" id="care-note" hidden>Die Betreuung bestehender Websites erfolgt nach technischer Prüfung.</p>
+          </fieldset>
 
           <div class="field">
             <label for="company">Unternehmen</label>
@@ -243,6 +263,12 @@
           <div class="field">
             <label for="phone">Telefonnummer <span class="opt">(optional)</span></label>
             <input id="phone" name="Telefon" type="tel" inputmode="tel" autocomplete="tel" maxlength="40">
+          </div>
+
+          <div class="field" id="field-url" hidden>
+            <label for="url">Bestehende Website <span class="opt">(optional)</span></label>
+            <input id="url" name="Bestehende-Website" type="url" inputmode="url" autocomplete="url" maxlength="200" placeholder="https://" aria-describedby="url-err">
+            <p class="err" id="url-err" role="alert"></p>
           </div>
 
           <div class="field">
