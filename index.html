@@ -21,10 +21,10 @@
 
   <script>document.documentElement.classList.add("js")</script>
   <!-- ?v=… : bei jeder Änderung an CSS/JS erhöhen, damit Browser nie veraltete Dateien nutzen -->
-  <link rel="stylesheet" href="styles.css?v=20261107">
-  <script src="config.js?v=20261107"></script>
-  <script src="script.js?v=20261107" defer></script>
-  <script src="effects.js?v=20261107" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261107d">
+  <script src="config.js?v=20261107d"></script>
+  <script src="script.js?v=20261107d" defer></script>
+  <script src="effects.js?v=20261107d" defer></script>
 </head>
 <body>
   <a class="skip" href="#arbeiten">Zum Inhalt springen</a>
@@ -45,7 +45,7 @@
       <canvas class="hero__fx" id="hero-fx" aria-hidden="true"></canvas>
       <div class="wrap hero__in">
         <p class="hero__meta">Webdesign-Studio</p>
-        <h1 id="hero-title" class="hero__title">
+        <h1 id="hero-title" class="hero__title" data-typo="words">
           <span class="line"><span>Deine Website.</span></span>
           <span class="line"><span>Ganz einfach.</span></span>
         </h1>
@@ -65,7 +65,7 @@
     <section class="section" id="arbeiten" aria-labelledby="work-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="work-title">Ausgewählte Arbeiten.</h2>
+          <h2 id="work-title" data-typo="words">Ausgewählte Arbeiten.</h2>
           <p>Drei unterschiedliche Website-Konzepte.</p>
         </div>
 
@@ -123,7 +123,7 @@
     <section class="section section--alt" id="preise" aria-labelledby="price-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="price-title">Einfach. Transparent. Schnell.</h2>
+          <h2 id="price-title" data-typo="words">Einfach. Transparent. Schnell.</h2>
         </div>
 
         <div class="plans">
@@ -181,7 +181,7 @@
     <section class="section" id="betreuung" aria-labelledby="care-title">
       <div class="wrap" id="care-wrap">
         <div class="section__head reveal">
-          <h2 id="care-title">Website-Betreuung.</h2>
+          <h2 id="care-title" data-typo="words">Website-Betreuung.</h2>
           <p>Auf Wunsch kümmern wir uns auch nach der Veröffentlichung um deine Website.</p>
         </div>
 
@@ -243,7 +243,7 @@
     <section class="contact" id="kontakt" aria-labelledby="contact-title">
       <div class="wrap contact__in" id="contact-wrap">
         <div class="contact__intro reveal">
-          <h2 id="contact-title">Bereit für deine neue Website?</h2>
+          <h2 id="contact-title" data-typo="words">Bereit für deine neue Website?</h2>
           <p>Erzähl uns kurz von deinem Projekt. Wir melden uns persönlich bei dir.</p>
           <p class="contact__fallback" id="mail-fallback" hidden>
             Lieber per E-Mail? <a id="mail-link" href="#"></a>
@@ -259,13 +259,29 @@
             </div>
           </fieldset>
 
-          <!-- Zusammenfassung der aktuellen Auswahl -->
+          <!-- Zusammenfassung der aktuellen Auswahl (animiert jede Zeile separat) -->
           <div class="summary" id="summary">
             <div class="summary__head">
               <span class="summary__title" id="summary-title">Deine Auswahl</span>
-              <button type="button" class="summary__toggle" id="sel-toggle" aria-expanded="true" aria-controls="sel">Schließen</button>
+              <button type="button" class="summary__toggle" id="sel-toggle" aria-expanded="true" aria-controls="sel">Auswahl einklappen</button>
             </div>
-            <ul class="summary__list" id="summary-list" aria-live="polite" aria-labelledby="summary-title"></ul>
+            <div class="summary__rows" id="summary-list" aria-live="polite" aria-labelledby="summary-title">
+              <div class="summary__row" id="sum-row-empty">
+                <div class="summary__row-in">
+                  <div class="summary__empty" id="sum-empty-txt">Bitte wähle ein Website-Paket.</div>
+                </div>
+              </div>
+              <div class="summary__row is-closed" id="sum-row-web">
+                <div class="summary__row-in">
+                  <div class="summary__item"><span class="summary__val" id="sum-web-val"></span><span class="summary__tag">Website</span></div>
+                </div>
+              </div>
+              <div class="summary__row is-closed" id="sum-row-care">
+                <div class="summary__row-in">
+                  <div class="summary__item"><span class="summary__val" id="sum-care-val"></span><span class="summary__tag" id="sum-care-tag">Betreuung</span></div>
+                </div>
+              </div>
+            </div>
             <p class="err" id="sel-err" role="alert"></p>
           </div>
 

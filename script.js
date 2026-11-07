@@ -51,13 +51,126 @@
     veilTimer = setTimeout(function () { veil.classList.remove("is-active"); }, 520);
   }
 
+  function computeScrollTargetY(el) {
+    if (!el || el.id === "top") return 0;
+
+    /* Dynamische Klapp-Container, Reveal-Elemente und Überschriften-Parallaxe im Zielbereich
+       für die Messung kurz auf Endzustand setzen, damit die Zielberechnung 100 % exakt ist. */
+    var transient = $$(".collapse, .reveal, .section__head", el);
+    for (var i = 0; i < transient.length; i++) {
+      transient[i].style.transition = "none";
+      if (transient[i].classList.contains("section__head")) {
+        transient[i].style.setProperty("--py", "0px");
+      }
+    }
+    void el.offsetHeight;
+
+    var vh = window.innerHeight || document.documentElement.clientHeight || 800;
+    var vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+    var curY = window.scrollY || window.pageYOffset || 0;
+    var hh = header ? header.offsetHeight : (vw >= 720 ? 76 : 64);
+    var absTop = function (node) { return node.getBoundingClientRect().top + curY; };
+    var targetY = 0;
+
+    if (el.id === "preise") {
+      var headEl = $(".section__head", el);
+      var cardsEl = $(".plans", el);
+      var firstCard = $(".plan", el);
+      var firstBtn = $("[data-package]", el);
+      if (cardsEl) {
+        var cardsTop = absTop(cardsEl);
+        var headTop = headEl ? absTop(headEl) : cardsTop;
+        var headGap = Math.max(0, cardsTop - headTop);
+        var activeCard = (vw >= 980 || !firstCard) ? cardsEl : firstCard;
+        var cardsH = activeCard.offsetHeight;
+        var ctaBottomOffset = firstBtn ? ((absTop(firstBtn) + firstBtn.offsetHeight) - cardsTop) : cardsH;
+        var bottomPad = Math.max(14, Math.round(vh * 0.025));
+
+        var idealWithHead = (hh + 10) + headGap;
+        var maxForFullCards = vh - bottomPad - cardsH;
+        var maxForCta = vh - bottomPad - ctaBottomOffset;
+
+        var cardsVpTop;
+        if (maxForFullCards >= idealWithHead) {
+          /* Genug Platz für Überschrift + komplette Karten (z. B. 900p, 1080p) */
+          cardsVpTop = idealWithHead;
+        } else if (maxForFullCards >= hh + 6) {
+          /* Karten passen komplett unter den Header (z. B. 768p) */
+          cardsVpTop = Math.min(idealWithHead, maxForFullCards);
+        } else {
+          /* Niedriges Viewport (z. B. 600p): Preis, Leistungsliste und CTA-Buttons sicher sichtbar halten */
+          cardsVpTop = Math.max(-28, Math.min(hh + 6, maxForCta));
+        }
+        targetY = cardsTop - cardsVpTop;
+      } else {
+        targetY = absTop(el) - hh;
+      }
+    } else if (el.id === "betreuung") {
+      var cHeadEl = $(".section__head", el);
+      var ctxEl = $("#care-context");
+      var careCardsEl = $(".care", el);
+      var firstCareCard = $(".care__item", el);
+      var skipEl = $("#care-skip");
+      if (careCardsEl) {
+        var hasCtx = ctxEl && !ctxEl.classList.contains("is-closed");
+        var hasSkip = skipEl && !skipEl.classList.contains("is-closed");
+        var cCardsTop = absTop(careCardsEl);
+        var cHeadTop = cHeadEl ? absTop(cHeadEl) : cCardsTop;
+        var ctxTop = hasCtx ? absTop(ctxEl) : cCardsTop;
+        var cHeadGap = Math.max(0, cCardsTop - cHeadTop);
+        var ctxGap = hasCtx ? Math.max(0, cCardsTop - ctxTop) : 0;
+
+        var blockBottom;
+        if (vw >= 720) {
+          blockBottom = (hasSkip && skipEl) ? (absTop(skipEl) + skipEl.offsetHeight) : (cCardsTop + careCardsEl.offsetHeight);
+        } else {
+          blockBottom = cCardsTop + (firstCareCard ? firstCareCard.offsetHeight : careCardsEl.offsetHeight);
+        }
+        var blockH = Math.max(0, blockBottom - cCardsTop);
+        var cBottomPad = Math.max(10, Math.round(vh * 0.025));
+        var cMaxForBottom = vh - cBottomPad - blockH;
+        var minForCtx = (hh + 6) + ctxGap;
+        var cIdealWithHead = (hh + 12) + cHeadGap;
+
+        var cCardsVpTop;
+        if (cMaxForBottom >= cIdealWithHead) {
+          /* Genug Höhe für Überschrift + Kontextbanner + Karten + Skip-Button (z. B. 900p, 1080p) */
+          cCardsVpTop = cIdealWithHead;
+        } else {
+          /* Auf kompakteren Höhen (z. B. 600p, 768p) Kontextbanner + Karten + Skip-Button optimal rahmen,
+             ohne die Überschrift halb hinter dem Header abzuschneiden */
+          var framedCtxVpTop = (hh + Math.round(Math.max(6, Math.min(24, (vh - 600) * 0.1)))) + ctxGap;
+          cCardsVpTop = Math.max(minForCtx - 2, Math.min(framedCtxVpTop, cMaxForBottom));
+        }
+        targetY = cCardsTop - cCardsVpTop;
+      } else {
+        targetY = absTop(el) - hh;
+      }
+    } else {
+      var inner = $(".contact__in, .section__head", el) || el;
+      var innerTop = absTop(inner);
+      var topOffset = hh + Math.round(Math.max(18, Math.min(40, vh * 0.04)));
+      targetY = innerTop - topOffset;
+    }
+
+    requestAnimationFrame(function () {
+      for (var j = 0; j < transient.length; j++) {
+        transient[j].style.transition = "";
+      }
+    });
+
+    var maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+    return Math.max(0, Math.min(maxScroll, Math.round(targetY)));
+  }
+
   function scrollToSection(el, afterScroll) {
     if (!el) return;
     pulseDepth();
     /* Ziel-Elemente sofort einblenden, damit beim programmatischen Sprung keine Verzögerung entsteht */
     $$(".reveal", el).forEach(function (r) { r.classList.add("is-in"); });
     if (el.id === "kontakt" && form) form.classList.add("is-in");
-    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    var destY = computeScrollTargetY(el);
+    window.scrollTo({ top: destY, behavior: reduceMotion ? "auto" : "smooth" });
     if (afterScroll) setTimeout(afterScroll, reduceMotion ? 0 : 620);
   }
 
@@ -198,6 +311,15 @@
   var panelMaint = $("#panel-maint");
   var panelUrl = $("#panel-url");
   var summaryList = $("#summary-list");
+  var selErr = $("#sel-err");
+
+  var companyInput = $("#company");
+  var nameInput = $("#name");
+  var emailInput = $("#email");
+  var urlInput = $("#url");
+
+  /* Stellt sicher, dass die 3 animierten Zusammenfassungs-Zeilen in #summary-list
+     immer existieren – selbst falls das HTML aus einer älteren Vorlage stammt */
   var sumRowEmpty = $("#sum-row-empty");
   var sumEmptyTxt = $("#sum-empty-txt");
   var sumRowWeb = $("#sum-row-web");
@@ -205,12 +327,25 @@
   var sumRowCare = $("#sum-row-care");
   var sumCareVal = $("#sum-care-val");
   var sumCareTag = $("#sum-care-tag");
-  var selErr = $("#sel-err");
 
-  var companyInput = $("#company");
-  var nameInput = $("#name");
-  var emailInput = $("#email");
-  var urlInput = $("#url");
+  function ensureSummaryRows() {
+    if (!summaryList || (sumRowEmpty && summaryList.contains(sumRowEmpty))) return;
+    summaryList.textContent = "";
+    summaryList.className = "summary__rows";
+    summaryList.innerHTML =
+      '<div class="summary__row" id="sum-row-empty"><div class="summary__row-in"><div class="summary__empty" id="sum-empty-txt">Bitte wähle ein Website-Paket.</div></div></div>' +
+      '<div class="summary__row is-closed" id="sum-row-web"><div class="summary__row-in"><div class="summary__item"><span class="summary__val" id="sum-web-val"></span><span class="summary__tag">Website</span></div></div></div>' +
+      '<div class="summary__row is-closed" id="sum-row-care"><div class="summary__row-in"><div class="summary__item"><span class="summary__val" id="sum-care-val"></span><span class="summary__tag" id="sum-care-tag">Betreuung</span></div></div></div>';
+    sumRowEmpty = $("#sum-row-empty");
+    sumEmptyTxt = $("#sum-empty-txt");
+    sumRowWeb = $("#sum-row-web");
+    sumWebVal = $("#sum-web-val");
+    sumRowCare = $("#sum-row-care");
+    sumCareVal = $("#sum-care-val");
+    sumCareTag = $("#sum-care-tag");
+    if (window.SFY_TYPO_ENHANCE) window.SFY_TYPO_ENHANCE(summaryList);
+  }
+  ensureSummaryRows();
 
   function setCollapse(el, open) {
     if (!el) return;
@@ -223,12 +358,21 @@
     });
   }
 
+  function setDynamicText(el, nextText) {
+    if (!el) return false;
+    var prev = el.getAttribute("data-raw-text");
+    if (prev === null) prev = el.textContent;
+    if (prev === nextText) return false;
+    el.setAttribute("data-raw-text", nextText);
+    el.textContent = nextText;
+    if (window.SFY_TYPO_ENHANCE) window.SFY_TYPO_ENHANCE(el);
+    return !!prev;
+  }
+
   function setSummaryVal(el, nextText) {
     if (!el) return;
-    var prev = el.textContent;
-    if (prev === nextText) return;
-    el.textContent = nextText;
-    if (prev && nextText && !reduceMotion) {
+    var hadPrev = setDynamicText(el, nextText);
+    if (hadPrev && nextText && !reduceMotion) {
       el.classList.remove("is-swapping");
       void el.offsetWidth;
       el.classList.add("is-swapping");
@@ -239,20 +383,33 @@
     var isMaint = state.inquiryType === "maintenance";
     var hasWebsite = !isMaint && !!state.websitePackage;
 
-    /* 1. Preiskarten markieren */
+    /* 1. Preiskarten markieren + CTA-Text konsistent setzen */
+    var PLAN_CTA_DEFAULT = {
+      starter: "Starter anfragen",
+      business: "Business anfragen",
+      custom: "Projekt anfragen"
+    };
+    var PLAN_CTA_SELECTED = {
+      starter: "✓ Starter ausgewählt",
+      business: "✓ Business ausgewählt",
+      custom: "✓ Custom ausgewählt"
+    };
     $$("[data-plan]").forEach(function (card) {
       var key = card.getAttribute("data-plan");
       var sel = !isMaint && state.websitePackage === key;
       card.classList.toggle("is-selected", sel);
       var btn = $("[data-package]", card);
-      if (btn) btn.setAttribute("aria-pressed", sel ? "true" : "false");
+      if (btn) {
+        btn.setAttribute("aria-pressed", sel ? "true" : "false");
+        setDynamicText(btn, sel ? PLAN_CTA_SELECTED[key] : PLAN_CTA_DEFAULT[key]);
+      }
     });
 
     /* 2. Betreuungskarten + Kontext-Banner + Ohne-Betreuung-Button */
     setCollapse(careContext, hasWebsite);
     setCollapse(careSkip, hasWebsite);
     if (hasWebsite && careContextPkg) {
-      careContextPkg.textContent = PKG_LABELS[state.websitePackage] || "";
+      setDynamicText(careContextPkg, PKG_LABELS[state.websitePackage] || "");
     }
 
     $$("[data-care-card]").forEach(function (card) {
@@ -264,7 +421,11 @@
       if (btn) btn.setAttribute("aria-pressed", sel ? "true" : "false");
       if (lbl) {
         var baseName = key === "basic" ? "Basic Care" : "Premium Care";
-        lbl.textContent = hasWebsite ? (baseName + " hinzufügen") : (baseName + " anfragen");
+        if (sel) {
+          setDynamicText(lbl, "✓ " + baseName + " ausgewählt");
+        } else {
+          setDynamicText(lbl, hasWebsite ? (baseName + " hinzufügen") : (baseName + " anfragen"));
+        }
       }
     });
 
@@ -298,10 +459,11 @@
 
     if (selToggle) {
       selToggle.setAttribute("aria-expanded", showPicker ? "true" : "false");
-      selToggle.textContent = showPicker ? "Auswahl einklappen" : "Auswahl anpassen";
+      setDynamicText(selToggle, showPicker ? "Auswahl einklappen" : "Auswahl anpassen");
     }
 
     /* 6. Zusammenfassung animiert aktualisieren (jede Zeile gleitet sanft ein/aus) */
+    ensureSummaryRows();
     var showEmpty = isMaint ? !state.carePackage : !state.websitePackage;
     var showWebRow = !isMaint && !!state.websitePackage;
     var showCareRow = isMaint ? !!state.carePackage : (!!state.websitePackage && !!state.carePackage);
@@ -316,7 +478,7 @@
       setSummaryVal(sumCareVal, CARE_LABELS[state.carePackage]);
     }
     if (sumCareTag) {
-      sumCareTag.textContent = isMaint ? "Website-Betreuung" : "Betreuung";
+      setDynamicText(sumCareTag, isMaint ? "Website-Betreuung" : "Betreuung");
     }
     if (sumRowCare) {
       sumRowCare.classList.toggle("has-top-line", showWebRow && showCareRow);
@@ -400,6 +562,7 @@
       if (!r.checked) return;
       state.inquiryType = r.value;
       if (state.inquiryType === "maintenance") {
+        state.websitePackage = null;
         if (!state.carePackage) state.carePackage = "basic";
       }
       state.pickerOpen = true;
@@ -428,6 +591,7 @@
     r.addEventListener("change", function () {
       if (!r.checked) return;
       state.inquiryType = "maintenance";
+      state.websitePackage = null;
       state.carePackage = r.value;
       renderState();
     });
@@ -547,7 +711,7 @@
     submitBtn.disabled = on;
     submitBtn.classList.toggle("is-loading", on);
     if (on) submitBtn.setAttribute("aria-busy", "true"); else submitBtn.removeAttribute("aria-busy");
-    label.textContent = on ? "Wird gesendet" : "Anfrage senden";
+    setDynamicText(label, on ? "Wird gesendet" : "Anfrage senden");
   }
 
   form.addEventListener("submit", function (ev) {

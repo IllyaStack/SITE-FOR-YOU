@@ -231,4 +231,111 @@
       }, { passive: true });
     });
   })();
+
+  /* ======================================================================
+     4) Interaktive Typografie (Wort-Hover für Haupt-Slogans, Buchstaben-Hover
+        für statischen Fließ- und Oberflächentext)
+     Nutzt Intl.Segmenter für korrekte Unicode-Grapheme, bewahrt Zeilenumbruch
+     durch Wort-Wrapper (.t-w) und kommt komplett ohne JS-Hover-Listener aus.
+     ====================================================================== */
+  (function typography() {
+    if (!interactive) return;
+
+    var seg = (typeof Intl !== "undefined" && Intl.Segmenter)
+      ? new Intl.Segmenter("de", { granularity: "grapheme" })
+      : null;
+
+    function toGraphemes(str) {
+      if (seg) {
+        var out = [], it = seg.segment(str)[Symbol.iterator](), step;
+        while (!(step = it.next()).done) out.push(step.value.segment);
+        return out;
+      }
+      return Array.from ? Array.from(str) : str.split("");
+    }
+
+    var SKIP_TAGS = {
+      SCRIPT: 1, STYLE: 1, SVG: 1, CANVAS: 1, INPUT: 1, TEXTAREA: 1,
+      SELECT: 1, OPTION: 1, NOSCRIPT: 1, IMG: 1, BR: 1, HR: 1
+    };
+
+    function shouldSkipElement(el) {
+      if (!el || el.nodeType !== 1) return true;
+      if (SKIP_TAGS[el.tagName]) return true;
+      if (el.hasAttribute("data-typo-done") || el.isContentEditable) return true;
+      if (el.classList.contains("hp") || el.classList.contains("err") ||
+          el.classList.contains("status") || el.classList.contains("arrow") ||
+          el.classList.contains("plan__sel") || el.classList.contains("care__sel") ||
+          el.classList.contains("care-context__check")) {
+        return true;
+      }
+      return false;
+    }
+
+    function segmentTextNode(node, mode) {
+      var raw = node.nodeValue;
+      if (!raw || !/\S/.test(raw)) return;
+      var parts = raw.split(/([ \t\r\n]+)/);
+      var segWrap = document.createElement("span");
+      segWrap.className = "t-seg";
+      segWrap.setAttribute("data-typo-done", "1");
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        if (!p) continue;
+        if (/^[ \t\r\n]+$/.test(p)) {
+          segWrap.appendChild(document.createTextNode(p));
+        } else if (mode === "words") {
+          var w = document.createElement("span");
+          w.className = "t-word";
+          w.setAttribute("data-typo-done", "1");
+          w.textContent = p;
+          segWrap.appendChild(w);
+        } else {
+          var wWrap = document.createElement("span");
+          wWrap.className = "t-w";
+          wWrap.setAttribute("data-typo-done", "1");
+          var chars = toGraphemes(p);
+          for (var c = 0; c < chars.length; c++) {
+            var ch = chars[c];
+            if (ch === "\u00A0") {
+              wWrap.appendChild(document.createTextNode(ch));
+            } else {
+              var s = document.createElement("span");
+              s.className = "t-ch";
+              s.textContent = ch;
+              wWrap.appendChild(s);
+            }
+          }
+          segWrap.appendChild(wWrap);
+        }
+      }
+      if (node.parentNode) node.parentNode.replaceChild(segWrap, node);
+    }
+
+    function enhanceTree(root, inheritedMode) {
+      if (!root || shouldSkipElement(root)) return;
+      var mode = root.getAttribute("data-typo") === "words" ? "words" : (inheritedMode || "chars");
+      /* Falls root selbst ein einzelnes dynamisches Textelement ist, Rohwert merken */
+      if (!root.children.length && root.textContent && !root.hasAttribute("data-raw-text")) {
+        root.setAttribute("data-raw-text", root.textContent);
+      }
+      var childNodes = Array.prototype.slice.call(root.childNodes);
+      for (var i = 0; i < childNodes.length; i++) {
+        var n = childNodes[i];
+        if (n.nodeType === 3) {
+          segmentTextNode(n, mode);
+        } else if (n.nodeType === 1) {
+          enhanceTree(n, mode);
+        }
+      }
+    }
+
+    window.SFY_TYPO_ENHANCE = function (el) {
+      if (!el) return;
+      var mode = (el.closest && el.closest('[data-typo="words"]')) ? "words" : "chars";
+      enhanceTree(el, mode);
+    };
+
+    enhanceTree(document.body, "chars");
+  })();
 })();
