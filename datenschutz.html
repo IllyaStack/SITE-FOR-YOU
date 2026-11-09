@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,101 +7,124 @@
   <meta name="description" content="Datenschutzerklärung von SITE FOR YOU.">
   <link rel="canonical" href="https://siteforyou.at/datenschutz.html">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add("js")</script>
+  <link rel="stylesheet" href="styles.css?v=20261109a">
+  <script src="config.js?v=20261109a"></script>
+  <script src="locales/de.js?v=20261109a" defer></script>
+  <script src="locales/en.js?v=20261109a" defer></script>
+  <script src="locales/uk.js?v=20261109a" defer></script>
+  <script src="locales/tr.js?v=20261109a" defer></script>
+  <script src="locales/it.js?v=20261109a" defer></script>
+  <script src="locales/zh-Hans.js?v=20261109a" defer></script>
+  <script src="locales/ar.js?v=20261109a" defer></script>
+  <script src="i18n.js?v=20261109a" defer></script>
+  <script src="effects.js?v=20261109a" defer></script>
 </head>
-<body>
-  <header class="header is-solid">
+<body data-page="privacy">
+  <header class="header is-solid" id="header">
     <div class="wrap header__in">
-      <a class="logo" href="index.html" aria-label="SITE FOR YOU. – zur Startseite">SITE FOR YOU.</a>
-      <a class="btn btn--small" href="index.html#kontakt">Kontakt</a>
+      <a class="logo" href="index.html" dir="ltr" aria-label="SITE FOR YOU. – zur Startseite" data-i18n-aria="nav.logoHomeAria">SITE FOR YOU.</a>
+      <div class="header__actions">
+        <div class="lang" id="lang-switcher" data-typo-skip="1">
+          <button type="button" class="lang__btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu" aria-label="Sprache wählen (Deutsch)">
+            <span class="lang__code" id="lang-current" dir="ltr">DE</span>
+            <svg class="lang__chev" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+              <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <ul class="lang__menu" id="lang-menu" role="listbox" aria-label="Sprache wählen" tabindex="-1"></ul>
+        </div>
+        <a class="btn btn--small" href="index.html#kontakt" data-i18n="nav.contact">Kontakt</a>
+      </div>
     </div>
   </header>
   <main class="legal">
     <div class="wrap">
-      <h1>Datenschutzerklärung</h1>
-      <p>Stand: November 2026</p>
+      <h1 data-typo="words" data-i18n="legal.privacy.h1">Datenschutzerklärung</h1>
+      <p class="legal__warn" data-i18n-html="legal.privacy.notice" hidden></p>
+      <p data-i18n="legal.privacy.updated">Stand: November 2026</p>
 
-      <h2>1. Verantwortlicher</h2>
-      <p>Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website ist:</p>
-      <p>Illia Sobotovych<br>SITE FOR YOU.<br>Hyrtlstraße 33/9<br>2340 Mödling<br>Österreich<br>E-Mail: <a href="mailto:sobotovychillya@gmail.com">sobotovychillya@gmail.com</a></p>
+      <h2 data-i18n="legal.privacy.s1Title">1. Verantwortlicher</h2>
+      <p data-i18n="legal.privacy.s1Intro">Verantwortlich für die Verarbeitung personenbezogener Daten auf dieser Website ist:</p>
+      <p><span data-i18n-html="legal.privacy.s1Address">Illia Sobotovych<br>SITE FOR YOU.<br>Hyrtlstraße 33/9<br>2340 Mödling<br>Österreich<br>E-Mail:</span> <a href="mailto:sobotovychillya@gmail.com" dir="ltr">sobotovychillya@gmail.com</a></p>
 
-      <h2>2. Verarbeitung von Kontaktanfragen</h2>
-      <p>Wenn du uns über das Kontaktformular kontaktierst, verarbeiten wir die von dir angegebenen Daten. Hierzu gehören insbesondere:</p>
+      <h2 data-i18n="legal.privacy.s2Title">2. Verarbeitung von Kontaktanfragen</h2>
+      <p data-i18n="legal.privacy.s2Intro">Wenn du uns über das Kontaktformular kontaktierst, verarbeiten wir die von dir angegebenen Daten. Hierzu gehören insbesondere:</p>
       <ul>
-        <li>Name</li>
-        <li>Unternehmensname</li>
-        <li>E-Mail-Adresse</li>
-        <li>gegebenenfalls Telefonnummer</li>
-        <li>ausgewähltes Website-Paket</li>
-        <li>Projektbeschreibung</li>
-        <li>technische Anfragenummer</li>
+        <li data-i18n="legal.privacy.s2Item1">Name</li>
+        <li data-i18n="legal.privacy.s2Item2">Unternehmensname</li>
+        <li data-i18n="legal.privacy.s2Item3">E-Mail-Adresse</li>
+        <li data-i18n="legal.privacy.s2Item4">gegebenenfalls Telefonnummer</li>
+        <li data-i18n="legal.privacy.s2Item5">ausgewähltes Website- bzw. Betreuungspaket sowie gewählte Sprache</li>
+        <li data-i18n="legal.privacy.s2Item6">Projektbeschreibung</li>
+        <li data-i18n="legal.privacy.s2Item7">technische Anfragenummer</li>
       </ul>
-      <p>Diese Daten werden verwendet, um deine Anfrage zu bearbeiten, mit dir Kontakt aufzunehmen und gegebenenfalls ein Angebot zu erstellen.</p>
-      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Durchführung vorvertraglicher Maßnahmen auf Anfrage der betroffenen Person).</p>
-      <p>Die als Pflichtfelder gekennzeichneten Angaben sind erforderlich, um die Anfrage bearbeiten zu können. Alle übrigen Angaben sind freiwillig.</p>
+      <p data-i18n="legal.privacy.s2Purpose">Diese Daten werden verwendet, um deine Anfrage zu bearbeiten, mit dir Kontakt aufzunehmen und gegebenenfalls ein Angebot zu erstellen.</p>
+      <p data-i18n="legal.privacy.s2Legal">Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Durchführung vorvertraglicher Maßnahmen auf Anfrage der betroffenen Person).</p>
+      <p data-i18n="legal.privacy.s2Required">Die als Pflichtfelder gekennzeichneten Angaben sind erforderlich, um die Anfrage bearbeiten zu können. Alle übrigen Angaben sind freiwillig.</p>
 
-      <h2>3. Hosting über Cloudflare</h2>
-      <p>Diese Website wird über Cloudflare Pages bereitgestellt, einen Dienst von Cloudflare.</p>
-      <p>Bei der Nutzung der Website können technisch erforderliche Verbindungs- und Zugriffsdaten verarbeitet werden, insbesondere IP-Adressen, Browserinformationen, Zeitpunkte der Zugriffe und angeforderte Inhalte.</p>
-      <p>Die Verarbeitung dient der technischen Bereitstellung, der Stabilität und der Sicherheit der Website.</p>
-      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.</p>
-      <p>Weitere Informationen: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">https://www.cloudflare.com/privacypolicy/</a></p>
+      <h2 data-i18n="legal.privacy.s3Title">3. Hosting über Cloudflare</h2>
+      <p data-i18n="legal.privacy.s3P1">Diese Website wird über Cloudflare Pages bereitgestellt, einen Dienst von Cloudflare.</p>
+      <p data-i18n="legal.privacy.s3P2">Bei der Nutzung der Website können technisch erforderliche Verbindungs- und Zugriffsdaten verarbeitet werden, insbesondere IP-Adressen, Browserinformationen, Zeitpunkte der Zugriffe und angeforderte Inhalte.</p>
+      <p data-i18n="legal.privacy.s3P3">Die Verarbeitung dient der technischen Bereitstellung, der Stabilität und der Sicherheit der Website.</p>
+      <p data-i18n="legal.privacy.s3P4">Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.</p>
+      <p><span data-i18n="legal.privacy.s3More">Weitere Informationen:</span> <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer" dir="ltr">https://www.cloudflare.com/privacypolicy/</a></p>
 
-      <h2>4. Verarbeitung von Formularanfragen über Formspree</h2>
-      <p>Für die technische Verarbeitung und Übermittlung von Kontaktanfragen verwenden wir Formspree.</p>
-      <p>Die im Kontaktformular eingegebenen Daten werden an Formspree übermittelt und dort zum Zweck der Bearbeitung und Zustellung unserer Anfragen verarbeitet.</p>
-      <p>Nach Angaben des Anbieters erfolgt die Verarbeitung unter anderem in den USA. Formspree gibt an, für entsprechende internationale Datenübermittlungen Standardvertragsklauseln zu verwenden.</p>
-      <p>Weitere Informationen: <a href="https://formspree.io/security/" target="_blank" rel="noopener noreferrer">https://formspree.io/security/</a></p>
-      <p>Die von Formspree angebotene Speicherung und Aufbewahrung richtet sich nach den vereinbarten Diensteinstellungen.</p>
+      <h2 data-i18n="legal.privacy.s4Title">4. Verarbeitung von Formularanfragen über Formspree</h2>
+      <p data-i18n="legal.privacy.s4P1">Für die technische Verarbeitung und Übermittlung von Kontaktanfragen verwenden wir Formspree.</p>
+      <p data-i18n="legal.privacy.s4P2">Die im Kontaktformular eingegebenen Daten werden an Formspree übermittelt und dort zum Zweck der Bearbeitung und Zustellung unserer Anfragen verarbeitet.</p>
+      <p data-i18n="legal.privacy.s4P3">Nach Angaben des Anbieters erfolgt die Verarbeitung unter anderem in den USA. Formspree gibt an, für entsprechende internationale Datenübermittlungen Standardvertragsklauseln zu verwenden.</p>
+      <p><span data-i18n="legal.privacy.s4More">Weitere Informationen:</span> <a href="https://formspree.io/security/" target="_blank" rel="noopener noreferrer" dir="ltr">https://formspree.io/security/</a></p>
+      <p data-i18n="legal.privacy.s4P4">Die von Formspree angebotene Speicherung und Aufbewahrung richtet sich nach den vereinbarten Diensteinstellungen.</p>
 
-      <h2>5. E-Mail-Kommunikation</h2>
-      <p>Zur Bearbeitung eingehender Anfragen verwenden wir Gmail, einen E-Mail-Dienst von Google.</p>
-      <p>Die durch das Kontaktformular übermittelten Informationen werden an unsere E-Mail-Adresse zugestellt und dort zur Bearbeitung deiner Anfrage gespeichert.</p>
-      <p>Eine Weitergabe der Anfragedaten zu Werbezwecken erfolgt nicht.</p>
-      <p>Weitere Informationen: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a></p>
+      <h2 data-i18n="legal.privacy.s5Title">5. E-Mail-Kommunikation</h2>
+      <p data-i18n="legal.privacy.s5P1">Zur Bearbeitung eingehender Anfragen verwenden wir Gmail, einen E-Mail-Dienst von Google.</p>
+      <p data-i18n="legal.privacy.s5P2">Die durch das Kontaktformular übermittelten Informationen werden an unsere E-Mail-Adresse zugestellt und dort zur Bearbeitung deiner Anfrage gespeichert.</p>
+      <p data-i18n="legal.privacy.s5P3">Eine Weitergabe der Anfragedaten zu Werbezwecken erfolgt nicht.</p>
+      <p><span data-i18n="legal.privacy.s5More">Weitere Informationen:</span> <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" dir="ltr">https://policies.google.com/privacy</a></p>
 
-      <h2>6. Speicherdauer</h2>
-      <p>Wir speichern personenbezogene Daten nur so lange, wie dies zur Bearbeitung der Anfrage, zur anschließenden Kommunikation und gegebenenfalls zur Durchführung eines Vertrags erforderlich ist.</p>
-      <p>Anfragen, aus denen kein Vertragsverhältnis entsteht, werden grundsätzlich spätestens sechs Monate nach Abschluss der Kommunikation gelöscht, sofern keine rechtlichen Gründe oder berechtigten Interessen eine längere Speicherung erforderlich machen.</p>
-      <p>Für Vertragsunterlagen können gesetzliche Aufbewahrungspflichten gelten.</p>
-      <p>Technische Daten, die durch Hosting- und Formulardienste verarbeitet werden, unterliegen zusätzlich den jeweiligen technischen Aufbewahrungsfristen.</p>
+      <h2 data-i18n="legal.privacy.s6Title">6. Speicherdauer</h2>
+      <p data-i18n="legal.privacy.s6P1">Wir speichern personenbezogene Daten nur so lange, wie dies zur Bearbeitung der Anfrage, zur anschließenden Kommunikation und gegebenenfalls zur Durchführung eines Vertrags erforderlich ist.</p>
+      <p data-i18n="legal.privacy.s6P2">Anfragen, aus denen kein Vertragsverhältnis entsteht, werden grundsätzlich spätestens sechs Monate nach Abschluss der Kommunikation gelöscht, sofern keine rechtlichen Gründe oder berechtigten Interessen eine längere Speicherung erforderlich machen.</p>
+      <p data-i18n="legal.privacy.s6P3">Für Vertragsunterlagen können gesetzliche Aufbewahrungspflichten gelten.</p>
+      <p data-i18n="legal.privacy.s6P4">Technische Daten, die durch Hosting- und Formulardienste verarbeitet werden, unterliegen zusätzlich den jeweiligen technischen Aufbewahrungsfristen.</p>
 
-      <h2>7. Cookies und Tracking</h2>
-      <p>Wir setzen keine eigenen Analyse- oder Werbetrackingdienste ein.</p>
-      <p>Ob technisch notwendige Cookies oder vergleichbare Technologien durch die eingesetzten Dienste verwendet werden, richtet sich nach deren tatsächlicher technischer Implementierung.</p>
-      <p>Eine gegebenenfalls erforderliche Einwilligung wird vor dem Einsatz einwilligungspflichtiger Technologien eingeholt.</p>
+      <h2 data-i18n="legal.privacy.s7Title">7. Cookies, lokale Spracheinstellung und Tracking</h2>
+      <p data-i18n="legal.privacy.s7P1">Wir setzen keine eigenen Analyse- oder Werbetrackingdienste ein.</p>
+      <p data-i18n="legal.privacy.s7P2">Wenn du auf der Website aktiv eine Sprache auswählst, wird ausschließlich der gewählte Sprachcode lokal in deinem Browser (Local Storage) gespeichert, um deine bevorzugte Sprache bei weiteren Aufrufen beizubehalten.</p>
+      <p data-i18n="legal.privacy.s7P3">Ob technisch notwendige Cookies oder vergleichbare Technologien durch die eingesetzten Dienste verwendet werden, richtet sich nach deren tatsächlicher technischer Implementierung.</p>
 
-      <h2>8. Externe Links</h2>
-      <p>Unsere Website enthält Links zu externen Website-Demonstrationen, die unter anderem über GitHub Pages bereitgestellt werden.</p>
-      <p>Beim Öffnen dieser Links verlässt du unsere Website. Für die dortige Datenverarbeitung sind die jeweiligen Betreiber verantwortlich.</p>
+      <h2 data-i18n="legal.privacy.s8Title">8. Externe Links</h2>
+      <p data-i18n="legal.privacy.s8P1">Unsere Website enthält Links zu externen Website-Demonstrationen, die unter anderem über GitHub Pages bereitgestellt werden.</p>
+      <p data-i18n="legal.privacy.s8P2">Beim Öffnen dieser Links verlässt du unsere Website. Für die dortige Datenverarbeitung sind die jeweiligen Betreiber verantwortlich.</p>
 
-      <h2>9. Rechte betroffener Personen</h2>
-      <p>Im Rahmen der gesetzlichen Voraussetzungen hast du insbesondere folgende Rechte:</p>
+      <h2 data-i18n="legal.privacy.s9Title">9. Rechte betroffener Personen</h2>
+      <p data-i18n="legal.privacy.s9Intro">Im Rahmen der gesetzlichen Voraussetzungen hast du insbesondere folgende Rechte:</p>
       <ul>
-        <li>Auskunft (Art. 15 DSGVO)</li>
-        <li>Berichtigung (Art. 16 DSGVO)</li>
-        <li>Löschung (Art. 17 DSGVO)</li>
-        <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
-        <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
-        <li>Widerspruch gegen bestimmte Verarbeitungen (Art. 21 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item1">Auskunft (Art. 15 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item2">Berichtigung (Art. 16 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item3">Löschung (Art. 17 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item4">Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item5">Datenübertragbarkeit (Art. 20 DSGVO)</li>
+        <li data-i18n="legal.privacy.s9Item6">Widerspruch gegen bestimmte Verarbeitungen (Art. 21 DSGVO)</li>
       </ul>
-      <p>Zur Ausübung deiner Rechte kannst du uns unter <a href="mailto:sobotovychillya@gmail.com">sobotovychillya@gmail.com</a> kontaktieren.</p>
-      <p>Du hast außerdem das Recht, Beschwerde bei der österreichischen Datenschutzbehörde einzulegen.</p>
-      <p>Österreichische Datenschutzbehörde<br><a href="https://www.dsb.gv.at/" target="_blank" rel="noopener noreferrer">https://www.dsb.gv.at/</a></p>
+      <p><span data-i18n="legal.privacy.s9ContactPrefix">Zur Ausübung deiner Rechte kannst du uns unter</span> <a href="mailto:sobotovychillya@gmail.com" dir="ltr">sobotovychillya@gmail.com</a> <span data-i18n="legal.privacy.s9ContactSuffix">kontaktieren.</span></p>
+      <p data-i18n="legal.privacy.s9Dpa">Du hast außerdem das Recht, Beschwerde bei der österreichischen Datenschutzbehörde einzulegen.</p>
+      <p><span data-i18n="legal.privacy.s9DpaName">Österreichische Datenschutzbehörde</span><br><a href="https://www.dsb.gv.at/" target="_blank" rel="noopener noreferrer" dir="ltr">https://www.dsb.gv.at/</a></p>
 
-      <h2>10. Automatisierte Entscheidungen</h2>
-      <p>Bei der Bearbeitung von Projektanfragen erfolgt keine ausschließlich automatisierte Entscheidungsfindung im Sinne des Art. 22 DSGVO.</p>
+      <h2 data-i18n="legal.privacy.s10Title">10. Automatisierte Entscheidungen</h2>
+      <p data-i18n="legal.privacy.s10Text">Bei der Bearbeitung von Projektanfragen erfolgt keine ausschließlich automatisierte Entscheidungsfindung im Sinne des Art. 22 DSGVO.</p>
 
-      <h2>11. Änderungen dieser Datenschutzerklärung</h2>
-      <p>Diese Datenschutzerklärung wird angepasst, wenn sich die verwendeten Dienste oder die Verarbeitung personenbezogener Daten ändern.</p>
+      <h2 data-i18n="legal.privacy.s11Title">11. Änderungen dieser Datenschutzerklärung</h2>
+      <p data-i18n="legal.privacy.s11Text">Diese Datenschutzerklärung wird angepasst, wenn sich die verwendeten Dienste oder die Verarbeitung personenbezogener Daten ändern.</p>
 
-      <a class="legal__back" href="index.html">← Zurück zur Startseite</a>
+      <a class="legal__back" href="index.html" data-i18n="legal.backHome">← Zurück zur Startseite</a>
     </div>
   </main>
   <footer class="footer">
     <div class="wrap footer__in">
-      <p>© SITE FOR YOU.</p>
-      <nav aria-label="Rechtliches"><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></nav>
+      <p dir="ltr">© SITE FOR YOU.</p>
+      <nav aria-label="Rechtliches" data-i18n-aria="footer.legalNavAria"><a href="impressum.html" data-i18n="footer.impressum">Impressum</a><a href="datenschutz.html" data-i18n="footer.privacy">Datenschutz</a></nav>
     </div>
   </footer>
 </body>

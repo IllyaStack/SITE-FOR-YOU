@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,31 +8,57 @@
   <meta name="theme-color" content="#151719">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 
-  <!-- Produktions-Domain: https://siteforyou.at (bei Domainwechsel hier und bei og:url anpassen). -->
+  <!-- Produktions-Domain: https://siteforyou.at -->
   <link rel="canonical" href="https://siteforyou.at/">
+  <link rel="alternate" hreflang="de" href="https://siteforyou.at/">
+  <link rel="alternate" hreflang="en" href="https://siteforyou.at/en/">
+  <link rel="alternate" hreflang="uk" href="https://siteforyou.at/uk/">
+  <link rel="alternate" hreflang="tr" href="https://siteforyou.at/tr/">
+  <link rel="alternate" hreflang="it" href="https://siteforyou.at/it/">
+  <link rel="alternate" hreflang="zh-Hans" href="https://siteforyou.at/zh/">
+  <link rel="alternate" hreflang="ar" href="https://siteforyou.at/ar/">
+  <link rel="alternate" hreflang="x-default" href="https://siteforyou.at/">
+
   <meta property="og:type" content="website">
   <meta property="og:locale" content="de_AT">
   <meta property="og:site_name" content="SITE FOR YOU.">
   <meta property="og:title" content="SITE FOR YOU. — Deine Website. Ganz einfach.">
   <meta property="og:description" content="Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.">
   <meta property="og:url" content="https://siteforyou.at/">
-  <!-- <meta property="og:image" content="https://DEINE-DOMAIN/assets/og-image.png"> -->
   <meta name="twitter:card" content="summary">
 
   <script>document.documentElement.classList.add("js")</script>
-  <!-- ?v=… : bei jeder Änderung an CSS/JS erhöhen, damit Browser nie veraltete Dateien nutzen -->
-  <link rel="stylesheet" href="styles.css?v=20261107d">
-  <script src="config.js?v=20261107d"></script>
-  <script src="script.js?v=20261107d" defer></script>
-  <script src="effects.js?v=20261107d" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261109a">
+  <script src="config.js?v=20261109a"></script>
+  <script src="locales/de.js?v=20261109a" defer></script>
+  <script src="locales/en.js?v=20261109a" defer></script>
+  <script src="locales/uk.js?v=20261109a" defer></script>
+  <script src="locales/tr.js?v=20261109a" defer></script>
+  <script src="locales/it.js?v=20261109a" defer></script>
+  <script src="locales/zh-Hans.js?v=20261109a" defer></script>
+  <script src="locales/ar.js?v=20261109a" defer></script>
+  <script src="i18n.js?v=20261109a" defer></script>
+  <script src="script.js?v=20261109a" defer></script>
+  <script src="effects.js?v=20261109a" defer></script>
 </head>
-<body>
-  <a class="skip" href="#arbeiten">Zum Inhalt springen</a>
+<body data-page="home">
+  <a class="skip" href="#arbeiten" data-i18n="nav.skip">Zum Inhalt springen</a>
 
   <header class="header" id="header">
     <div class="wrap header__in">
-      <a class="logo" href="#top" aria-label="SITE FOR YOU. – nach oben">SITE FOR YOU.</a>
-      <a class="btn btn--small" href="#kontakt">Kontakt</a>
+      <a class="logo" href="#top" dir="ltr" aria-label="SITE FOR YOU. – nach oben" data-i18n-aria="nav.logoAria">SITE FOR YOU.</a>
+      <div class="header__actions">
+        <div class="lang" id="lang-switcher" data-typo-skip="1">
+          <button type="button" class="lang__btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="lang-menu" aria-label="Sprache wählen (Deutsch)">
+            <span class="lang__code" id="lang-current" dir="ltr">DE</span>
+            <svg class="lang__chev" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+              <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <ul class="lang__menu" id="lang-menu" role="listbox" aria-label="Sprache wählen" tabindex="-1"></ul>
+        </div>
+        <a class="btn btn--small" href="#kontakt" data-i18n="nav.contact">Kontakt</a>
+      </div>
     </div>
   </header>
 
@@ -44,78 +70,76 @@
     <section class="hero" aria-labelledby="hero-title">
       <canvas class="hero__fx" id="hero-fx" aria-hidden="true"></canvas>
       <div class="wrap hero__in">
-        <p class="hero__meta">Webdesign-Studio</p>
+        <p class="hero__meta" data-i18n="hero.meta">Webdesign-Studio</p>
         <h1 id="hero-title" class="hero__title" data-typo="words">
-          <span class="line"><span>Deine Website.</span></span>
-          <span class="line"><span>Ganz einfach.</span></span>
+          <span class="line"><span data-i18n="hero.titleLine1">Deine Website.</span></span>
+          <span class="line"><span data-i18n="hero.titleLine2">Ganz einfach.</span></span>
         </h1>
         <div class="hero__bottom">
-          <p class="hero__text">Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.</p>
+          <p class="hero__text" data-i18n="hero.text">Moderne Websites für kleine Unternehmen. Klare Preise. Einfacher Ablauf.</p>
           <div class="hero__cta">
-            <a class="btn btn--light btn--large" href="#preise">Website ab 300&nbsp;€ ansehen <span aria-hidden="true" class="arrow">↓</span></a>
-            <p class="hero__loc">Wien, Österreich</p>
+            <a class="btn btn--light btn--large" href="#preise"><span data-i18n="hero.cta">Website ab 300&nbsp;€ ansehen</span> <span aria-hidden="true" class="arrow">↓</span></a>
+            <p class="hero__loc" data-i18n="hero.loc">Wien, Österreich</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. SELECTED WORK
-         Die Links stehen bewusst direkt im HTML (funktionieren ohne JavaScript und unabhängig von
-         zwischengespeicherten Dateien). config.js kann sie bei Bedarf überschreiben. -->
+    <!-- 2. SELECTED WORK -->
     <section class="section" id="arbeiten" aria-labelledby="work-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="work-title" data-typo="words">Ausgewählte Arbeiten.</h2>
-          <p>Drei unterschiedliche Website-Konzepte.</p>
+          <h2 id="work-title" data-typo="words" data-i18n="work.title">Ausgewählte Arbeiten.</h2>
+          <p data-i18n="work.subtitle">Drei unterschiedliche Website-Konzepte.</p>
         </div>
 
         <div class="work">
           <article class="project project--featured reveal is-live" data-project="h11">
-            <a class="project__link" href="https://illyastack.github.io/H11-demo/" target="_blank" rel="noopener noreferrer" aria-label="H11 Neubau – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+            <a class="project__link" href="https://illyastack.github.io/H11-demo/" target="_blank" rel="noopener noreferrer" aria-label="H11 Neubau – Website-Konzept als Live-Demo öffnen (neuer Tab)" data-i18n-aria="work.h11Aria">
               <div class="project__media has-img">
-                <img src="assets/portfolio/h11.webp" srcset="assets/portfolio/h11-720.webp 720w, assets/portfolio/h11.webp 1440w" sizes="(min-width: 1300px) 1130px, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts H11 Neubau" decoding="async">
+                <img src="assets/portfolio/h11.webp" srcset="assets/portfolio/h11-720.webp 720w, assets/portfolio/h11.webp 1440w" sizes="(min-width: 1300px) 1130px, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts H11 Neubau" data-i18n-alt="work.h11Alt" decoding="async">
               </div>
               <div class="project__info">
                 <div>
-                  <h3>H11 Neubau</h3>
-                  <p>Restaurant · Website-Konzept</p>
+                  <h3 dir="ltr">H11 Neubau</h3>
+                  <p data-i18n="work.h11Desc">Restaurant · Website-Konzept</p>
                 </div>
-                <span class="project__cta">Live-Demo</span>
+                <span class="project__cta" data-i18n="work.cta">Live-Demo</span>
               </div>
             </a>
           </article>
 
           <article class="project reveal is-live" data-project="hairnails">
-            <a class="project__link" href="https://illyastack.github.io/HairNails-demo/" target="_blank" rel="noopener noreferrer" aria-label="Hairnails – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+            <a class="project__link" href="https://illyastack.github.io/HairNails-demo/" target="_blank" rel="noopener noreferrer" aria-label="Hairnails – Website-Konzept als Live-Demo öffnen (neuer Tab)" data-i18n-aria="work.hairnailsAria">
               <div class="project__media has-img">
-                <img src="assets/portfolio/hairnails.webp" srcset="assets/portfolio/hairnails-720.webp 720w, assets/portfolio/hairnails.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Hairnails" loading="lazy" decoding="async">
+                <img src="assets/portfolio/hairnails.webp" srcset="assets/portfolio/hairnails-720.webp 720w, assets/portfolio/hairnails.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Hairnails" data-i18n-alt="work.hairnailsAlt" loading="lazy" decoding="async">
               </div>
               <div class="project__info">
                 <div>
-                  <h3>Hairnails</h3>
-                  <p>Beauty · Website-Konzept</p>
+                  <h3 dir="ltr">Hairnails</h3>
+                  <p data-i18n="work.hairnailsDesc">Beauty · Website-Konzept</p>
                 </div>
-                <span class="project__cta">Live-Demo</span>
+                <span class="project__cta" data-i18n="work.cta">Live-Demo</span>
               </div>
             </a>
           </article>
 
           <article class="project reveal is-live" data-project="loz">
-            <a class="project__link" href="https://illyastack.github.io/loz-redesign-demo/" target="_blank" rel="noopener noreferrer" aria-label="Loz – Website-Konzept als Live-Demo öffnen (neuer Tab)">
+            <a class="project__link" href="https://illyastack.github.io/loz-redesign-demo/" target="_blank" rel="noopener noreferrer" aria-label="Loz – Website-Konzept als Live-Demo öffnen (neuer Tab)" data-i18n-aria="work.lozAria">
               <div class="project__media has-img">
-                <img src="assets/portfolio/loz.webp" srcset="assets/portfolio/loz-720.webp 720w, assets/portfolio/loz.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Loz" loading="lazy" decoding="async">
+                <img src="assets/portfolio/loz.webp" srcset="assets/portfolio/loz-720.webp 720w, assets/portfolio/loz.webp 1440w" sizes="(min-width: 720px) 50vw, 100vw" width="1440" height="900" alt="Startseite des Website-Konzepts Loz" data-i18n-alt="work.lozAlt" loading="lazy" decoding="async">
               </div>
               <div class="project__info">
                 <div>
-                  <h3>Loz</h3>
-                  <p>Website-Konzept</p>
+                  <h3 dir="ltr">Loz</h3>
+                  <p data-i18n="work.lozDesc">Website-Konzept</p>
                 </div>
-                <span class="project__cta">Live-Demo</span>
+                <span class="project__cta" data-i18n="work.cta">Live-Demo</span>
               </div>
             </a>
           </article>
         </div>
-        <p class="note">Gezeigte Arbeiten sind eigenständig erstellte Website-Konzepte.</p>
+        <p class="note" data-i18n="work.note">Gezeigte Arbeiten sind eigenständig erstellte Website-Konzepte.</p>
       </div>
     </section>
 
@@ -123,57 +147,57 @@
     <section class="section section--alt" id="preise" aria-labelledby="price-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="price-title" data-typo="words">Einfach. Transparent. Schnell.</h2>
+          <h2 id="price-title" data-typo="words" data-i18n="price.title">Einfach. Transparent. Schnell.</h2>
         </div>
 
         <div class="plans">
           <article class="plan reveal" data-plan="starter">
-            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
-            <h3 class="plan__name">Starter</h3>
-            <p class="plan__price">300&nbsp;€</p>
-            <p class="plan__desc">Alles Wichtige auf einer Seite.</p>
+            <span class="plan__sel" aria-hidden="true" data-i18n="price.selectedBadge">✓ Ausgewählt</span>
+            <h3 class="plan__name" data-i18n="price.starter.name">Starter</h3>
+            <p class="plan__price" dir="ltr" data-i18n="price.starter.price">300&nbsp;€</p>
+            <p class="plan__desc" data-i18n="price.starter.desc">Alles Wichtige auf einer Seite.</p>
             <ul class="plan__list">
-              <li>One-Page-Website</li>
-              <li>Bis zu fünf Abschnitte</li>
-              <li>Für Handy und Computer optimiert</li>
-              <li>Grundlegende Suchmaschinen-Einrichtung</li>
-              <li>Kontaktdaten bzw. Kontaktbereich</li>
-              <li>Eine Korrekturrunde</li>
+              <li data-i18n="price.starter.f1">One-Page-Website</li>
+              <li data-i18n="price.starter.f2">Bis zu fünf Abschnitte</li>
+              <li data-i18n="price.starter.f3">Für Handy und Computer optimiert</li>
+              <li data-i18n="price.starter.f4">Grundlegende Suchmaschinen-Einrichtung</li>
+              <li data-i18n="price.starter.f5">Kontaktdaten bzw. Kontaktbereich</li>
+              <li data-i18n="price.starter.f6">Eine Korrekturrunde</li>
             </ul>
             <a class="btn btn--dark btn--block" href="#betreuung" data-package="starter" aria-pressed="false" role="button">Starter anfragen</a>
           </article>
 
           <article class="plan reveal" data-plan="business">
-            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
-            <h3 class="plan__name">Business</h3>
-            <p class="plan__price">500&nbsp;€</p>
-            <p class="plan__desc">Mehr Platz für dein Unternehmen.</p>
+            <span class="plan__sel" aria-hidden="true" data-i18n="price.selectedBadge">✓ Ausgewählt</span>
+            <h3 class="plan__name" data-i18n="price.business.name">Business</h3>
+            <p class="plan__price" dir="ltr" data-i18n="price.business.price">500&nbsp;€</p>
+            <p class="plan__desc" data-i18n="price.business.desc">Mehr Platz für dein Unternehmen.</p>
             <ul class="plan__list">
-              <li>Bis zu fünf Seiten</li>
-              <li>Für Handy und Computer optimiert</li>
-              <li>Grundlegende Suchmaschinen-Einrichtung</li>
-              <li>Kontaktbereich</li>
-              <li>Einfache Anbindungen nach Absprache</li>
-              <li>Zwei Korrekturrunden</li>
+              <li data-i18n="price.business.f1">Bis zu fünf Seiten</li>
+              <li data-i18n="price.business.f2">Für Handy und Computer optimiert</li>
+              <li data-i18n="price.business.f3">Grundlegende Suchmaschinen-Einrichtung</li>
+              <li data-i18n="price.business.f4">Kontaktbereich</li>
+              <li data-i18n="price.business.f5">Einfache Anbindungen nach Absprache</li>
+              <li data-i18n="price.business.f6">Zwei Korrekturrunden</li>
             </ul>
             <a class="btn btn--dark btn--block" href="#betreuung" data-package="business" aria-pressed="false" role="button">Business anfragen</a>
           </article>
 
           <article class="plan plan--dark reveal" data-plan="custom">
-            <span class="plan__sel" aria-hidden="true">✓ Ausgewählt</span>
-            <h3 class="plan__name">Custom</h3>
-            <p class="plan__price"><small>Ab</small> 1.000&nbsp;€</p>
-            <p class="plan__desc">Individuelle Lösungen für größere Projekte.</p>
+            <span class="plan__sel" aria-hidden="true" data-i18n="price.selectedBadge">✓ Ausgewählt</span>
+            <h3 class="plan__name" data-i18n="price.custom.name">Custom</h3>
+            <p class="plan__price"><small data-i18n="price.custom.pricePrefix">Ab</small> <span dir="ltr" data-i18n="price.custom.priceAmount">1.000&nbsp;€</span></p>
+            <p class="plan__desc" data-i18n="price.custom.desc">Individuelle Lösungen für größere Projekte.</p>
             <ul class="plan__list">
-              <li>Individuell geplante Website</li>
-              <li>Maßgeschneidertes Design und Funktionen</li>
-              <li>Umfang und Preis nach Anforderungen</li>
-              <li>Persönliche Projektberatung</li>
+              <li data-i18n="price.custom.f1">Individuell geplante Website</li>
+              <li data-i18n="price.custom.f2">Maßgeschneidertes Design und Funktionen</li>
+              <li data-i18n="price.custom.f3">Umfang und Preis nach Anforderungen</li>
+              <li data-i18n="price.custom.f4">Persönliche Projektberatung</li>
             </ul>
             <a class="btn btn--light btn--block" href="#betreuung" data-package="custom" aria-pressed="false" role="button">Projekt anfragen</a>
           </article>
         </div>
-        <p class="note reveal">Einmalige Erstellungskosten. Domain und laufende Betreuung werden separat vereinbart.</p>
+        <p class="note reveal" data-i18n="price.note">Einmalige Erstellungskosten. Domain und laufende Betreuung werden separat vereinbart.</p>
       </div>
     </section>
 
@@ -181,46 +205,46 @@
     <section class="section" id="betreuung" aria-labelledby="care-title">
       <div class="wrap" id="care-wrap">
         <div class="section__head reveal">
-          <h2 id="care-title" data-typo="words">Website-Betreuung.</h2>
-          <p>Auf Wunsch kümmern wir uns auch nach der Veröffentlichung um deine Website.</p>
+          <h2 id="care-title" data-typo="words" data-i18n="care.title">Website-Betreuung.</h2>
+          <p data-i18n="care.subtitle">Auf Wunsch kümmern wir uns auch nach der Veröffentlichung um deine Website.</p>
         </div>
 
         <!-- Erscheint nur, wenn zuvor ein Website-Paket gewählt wurde -->
         <div class="collapse is-closed" id="care-context" inert>
           <div class="collapse__in">
             <div class="care-context">
-              <p class="care-context__line"><span class="care-context__check" aria-hidden="true">✓</span> Dein Website-Paket: <strong id="care-context-pkg"></strong> <a href="#preise" id="care-change">Ändern</a></p>
-              <p class="care-context__hint">Optional: Füge eine Betreuung hinzu oder fahre ohne Betreuung fort.</p>
+              <p class="care-context__line"><span class="care-context__check" aria-hidden="true">✓</span> <span data-i18n="care.contextPrefix">Dein Website-Paket:</span> <strong id="care-context-pkg"></strong> <a href="#preise" id="care-change" data-i18n="care.contextChange">Ändern</a></p>
+              <p class="care-context__hint" data-i18n="care.contextHint">Optional: Füge eine Betreuung hinzu oder fahre ohne Betreuung fort.</p>
             </div>
           </div>
         </div>
 
         <div class="care">
           <article class="care__item reveal" data-care-card="basic">
-            <span class="care__sel" aria-hidden="true">✓ Ausgewählt</span>
+            <span class="care__sel" aria-hidden="true" data-i18n="price.selectedBadge">✓ Ausgewählt</span>
             <div class="care__top">
-              <h3>Basic Care</h3>
-              <p class="care__price">20&nbsp;€ <span>/ Monat</span></p>
+              <h3 data-i18n="care.basic.name">Basic Care</h3>
+              <p class="care__price"><span class="care__amount" dir="ltr" data-i18n="care.basic.price">20&nbsp;€</span> <span class="care__per" data-i18n="care.perMonth">/ Monat</span></p>
             </div>
             <ul class="care__list">
-              <li>Hosting</li>
-              <li>SSL-Verschlüsselung</li>
-              <li>Grundlegende technische Überwachung</li>
-              <li>Backups, sofern vom Hosting unterstützt</li>
+              <li data-i18n="care.basic.f1">Hosting</li>
+              <li data-i18n="care.basic.f2">SSL-Verschlüsselung</li>
+              <li data-i18n="care.basic.f3">Grundlegende technische Überwachung</li>
+              <li data-i18n="care.basic.f4">Backups, sofern vom Hosting unterstützt</li>
             </ul>
             <a class="btn btn--outline care__cta" href="#kontakt" data-care="basic" role="button" aria-pressed="false"><span class="care__cta-label">Basic Care anfragen</span></a>
           </article>
 
           <article class="care__item reveal" data-care-card="premium">
-            <span class="care__sel" aria-hidden="true">✓ Ausgewählt</span>
+            <span class="care__sel" aria-hidden="true" data-i18n="price.selectedBadge">✓ Ausgewählt</span>
             <div class="care__top">
-              <h3>Premium Care</h3>
-              <p class="care__price">40&nbsp;€ <span>/ Monat</span></p>
+              <h3 data-i18n="care.premium.name">Premium Care</h3>
+              <p class="care__price"><span class="care__amount" dir="ltr" data-i18n="care.premium.price">40&nbsp;€</span> <span class="care__per" data-i18n="care.perMonth">/ Monat</span></p>
             </div>
-            <p class="care__plus">Alles aus Basic Care, zusätzlich:</p>
+            <p class="care__plus" data-i18n="care.premium.plus">Alles aus Basic Care, zusätzlich:</p>
             <ul class="care__list">
-              <li>Bis zu zwei kleine Inhaltsänderungen pro Monat</li>
-              <li>Höchstens 30 Minuten Bearbeitungszeit pro Monat</li>
+              <li data-i18n="care.premium.f1">Bis zu zwei kleine Inhaltsänderungen pro Monat</li>
+              <li data-i18n="care.premium.f2">Höchstens 30 Minuten Bearbeitungszeit pro Monat</li>
             </ul>
             <a class="btn btn--outline care__cta" href="#kontakt" data-care="premium" role="button" aria-pressed="false"><span class="care__cta-label">Premium Care anfragen</span></a>
           </article>
@@ -230,12 +254,12 @@
         <div class="collapse is-closed" id="care-skip" inert>
           <div class="collapse__in">
             <div class="care-skip">
-              <button type="button" class="btn btn--ghost" id="skip-care">Ohne Betreuung fortfahren <span aria-hidden="true" class="arrow arrow--right">→</span></button>
+              <button type="button" class="btn btn--ghost" id="skip-care"><span data-i18n="care.skip">Ohne Betreuung fortfahren</span> <span aria-hidden="true" class="arrow arrow--right">→</span></button>
             </div>
           </div>
         </div>
 
-        <p class="note reveal">Optionale, monatliche Leistungen – nicht im Website-Preis enthalten. Domains und weitere Entwicklungsarbeiten sind nicht automatisch inbegriffen.</p>
+        <p class="note reveal" data-i18n="care.note">Optionale, monatliche Leistungen – nicht im Website-Preis enthalten. Domains und weitere Entwicklungsarbeiten sind nicht automatisch inbegriffen.</p>
       </div>
     </section>
 
@@ -243,26 +267,26 @@
     <section class="contact" id="kontakt" aria-labelledby="contact-title">
       <div class="wrap contact__in" id="contact-wrap">
         <div class="contact__intro reveal">
-          <h2 id="contact-title" data-typo="words">Bereit für deine neue Website?</h2>
-          <p>Erzähl uns kurz von deinem Projekt. Wir melden uns persönlich bei dir.</p>
+          <h2 id="contact-title" data-typo="words" data-i18n="form.title">Bereit für deine neue Website?</h2>
+          <p data-i18n="form.intro">Erzähl uns kurz von deinem Projekt. Wir melden uns persönlich bei dir.</p>
           <p class="contact__fallback" id="mail-fallback" hidden>
-            Lieber per E-Mail? <a id="mail-link" href="#"></a>
+            <span data-i18n="form.mailFallbackPrefix">Lieber per E-Mail?</span> <a id="mail-link" href="#" dir="ltr"></a>
           </p>
         </div>
 
         <form class="form form-seq" id="form" novalidate>
           <fieldset class="choice" id="fs-type">
-            <legend>Was benötigst du?</legend>
+            <legend data-i18n="form.typeLegend">Was benötigst du?</legend>
             <div class="choice__grid choice__grid--2">
-              <label class="rc"><input type="radio" name="Anfrageart" value="website" checked><span class="rc__body"><span class="rc__name">Neue Website</span></span></label>
-              <label class="rc"><input type="radio" name="Anfrageart" value="maintenance"><span class="rc__body"><span class="rc__name">Website-Betreuung</span></span></label>
+              <label class="rc"><input type="radio" name="Anfrageart" value="website" checked><span class="rc__body"><span class="rc__name" data-i18n="form.typeWebsite">Neue Website</span></span></label>
+              <label class="rc"><input type="radio" name="Anfrageart" value="maintenance"><span class="rc__body"><span class="rc__name" data-i18n="form.typeMaint">Website-Betreuung</span></span></label>
             </div>
           </fieldset>
 
           <!-- Zusammenfassung der aktuellen Auswahl (animiert jede Zeile separat) -->
           <div class="summary" id="summary">
             <div class="summary__head">
-              <span class="summary__title" id="summary-title">Deine Auswahl</span>
+              <span class="summary__title" id="summary-title" data-i18n="form.summaryTitle">Deine Auswahl</span>
               <button type="button" class="summary__toggle" id="sel-toggle" aria-expanded="true" aria-controls="sel">Auswahl einklappen</button>
             </div>
             <div class="summary__rows" id="summary-list" aria-live="polite" aria-labelledby="summary-title">
@@ -273,7 +297,7 @@
               </div>
               <div class="summary__row is-closed" id="sum-row-web">
                 <div class="summary__row-in">
-                  <div class="summary__item"><span class="summary__val" id="sum-web-val"></span><span class="summary__tag">Website</span></div>
+                  <div class="summary__item"><span class="summary__val" id="sum-web-val"></span><span class="summary__tag" id="sum-web-tag" data-i18n="form.tagWebsite">Website</span></div>
                 </div>
               </div>
               <div class="summary__row is-closed" id="sum-row-care">
@@ -291,19 +315,19 @@
               <div class="collapse" id="panel-website">
                 <div class="collapse__in stack">
                   <fieldset class="choice">
-                    <legend>Gewünschtes Paket</legend>
+                    <legend data-i18n="form.pkgLegend">Gewünschtes Paket</legend>
                     <div class="choice__grid">
-                      <label class="rc"><input type="radio" name="w_pkg" value="starter"><span class="rc__body"><span class="rc__name">Starter</span><span class="rc__price">300 €</span></span></label>
-                      <label class="rc"><input type="radio" name="w_pkg" value="business"><span class="rc__body"><span class="rc__name">Business</span><span class="rc__price">500 €</span></span></label>
-                      <label class="rc"><input type="radio" name="w_pkg" value="custom"><span class="rc__body"><span class="rc__name">Custom</span><span class="rc__price">ab 1.000 €</span></span></label>
+                      <label class="rc"><input type="radio" name="w_pkg" value="starter"><span class="rc__body"><span class="rc__name" data-i18n="price.starter.name">Starter</span><span class="rc__price" data-i18n="form.rcStarterPrice">300 €</span></span></label>
+                      <label class="rc"><input type="radio" name="w_pkg" value="business"><span class="rc__body"><span class="rc__name" data-i18n="price.business.name">Business</span><span class="rc__price" data-i18n="form.rcBusinessPrice">500 €</span></span></label>
+                      <label class="rc"><input type="radio" name="w_pkg" value="custom"><span class="rc__body"><span class="rc__name" data-i18n="price.custom.name">Custom</span><span class="rc__price" data-i18n="form.rcCustomPrice">ab 1.000 €</span></span></label>
                     </div>
                   </fieldset>
                   <fieldset class="choice">
-                    <legend>Betreuung dazu <span class="opt">(optional)</span></legend>
+                    <legend><span data-i18n="form.careLegend">Betreuung dazu</span> <span class="opt" data-i18n="form.optional">(optional)</span></legend>
                     <div class="choice__grid">
-                      <label class="rc"><input type="radio" name="w_care" value="none" checked><span class="rc__body"><span class="rc__name">Keine</span><span class="rc__price">ohne Betreuung</span></span></label>
-                      <label class="rc"><input type="radio" name="w_care" value="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
-                      <label class="rc"><input type="radio" name="w_care" value="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="w_care" value="none" checked><span class="rc__body"><span class="rc__name" data-i18n="form.careNoneName">Keine</span><span class="rc__price" data-i18n="form.careNonePrice">ohne Betreuung</span></span></label>
+                      <label class="rc"><input type="radio" name="w_care" value="basic"><span class="rc__body"><span class="rc__name" data-i18n="care.basic.name">Basic Care</span><span class="rc__price" data-i18n="form.rcBasicPrice">20 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="w_care" value="premium"><span class="rc__body"><span class="rc__name" data-i18n="care.premium.name">Premium Care</span><span class="rc__price" data-i18n="form.rcPremiumPrice">40 €/Monat</span></span></label>
                     </div>
                   </fieldset>
                 </div>
@@ -312,10 +336,10 @@
               <div class="collapse is-closed" id="panel-maint" inert>
                 <div class="collapse__in stack">
                   <fieldset class="choice">
-                    <legend>Gewünschte Betreuung</legend>
+                    <legend data-i18n="form.maintLegend">Gewünschte Betreuung</legend>
                     <div class="choice__grid choice__grid--2">
-                      <label class="rc"><input type="radio" name="m_care" value="basic"><span class="rc__body"><span class="rc__name">Basic Care</span><span class="rc__price">20 €/Monat</span></span></label>
-                      <label class="rc"><input type="radio" name="m_care" value="premium"><span class="rc__body"><span class="rc__name">Premium Care</span><span class="rc__price">40 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="m_care" value="basic"><span class="rc__body"><span class="rc__name" data-i18n="care.basic.name">Basic Care</span><span class="rc__price" data-i18n="form.rcBasicPrice">20 €/Monat</span></span></label>
+                      <label class="rc"><input type="radio" name="m_care" value="premium"><span class="rc__body"><span class="rc__name" data-i18n="care.premium.name">Premium Care</span><span class="rc__price" data-i18n="form.rcPremiumPrice">40 €/Monat</span></span></label>
                     </div>
                   </fieldset>
                 </div>
@@ -327,53 +351,53 @@
           <div class="collapse is-closed" id="panel-url" inert>
             <div class="collapse__in stack">
               <div class="field" id="field-url">
-                <label for="url">Bestehende Website <span class="opt">(optional)</span></label>
-                <input id="url" name="Bestehende-Website" type="url" inputmode="url" autocomplete="url" maxlength="200" placeholder="https://" aria-describedby="url-err">
+                <label for="url"><span data-i18n="form.urlLabel">Bestehende Website</span> <span class="opt" data-i18n="form.optional">(optional)</span></label>
+                <input id="url" name="Bestehende-Website" type="url" dir="ltr" inputmode="url" autocomplete="url" maxlength="200" placeholder="https://" data-i18n-placeholder="form.urlPlaceholder" aria-describedby="url-err">
                 <p class="err" id="url-err" role="alert"></p>
               </div>
-              <p class="choice__note">Die Betreuung bestehender Websites erfolgt nach technischer Prüfung.</p>
+              <p class="choice__note" data-i18n="form.maintNote">Die Betreuung bestehender Websites erfolgt nach technischer Prüfung.</p>
             </div>
           </div>
 
           <div class="field">
-            <label for="company">Unternehmen</label>
+            <label for="company" data-i18n="form.companyLabel">Unternehmen</label>
             <input id="company" name="Unternehmen" type="text" autocomplete="organization" maxlength="100" required aria-describedby="company-err">
             <p class="err" id="company-err" role="alert"></p>
           </div>
 
           <div class="field">
-            <label for="name">Name</label>
+            <label for="name" data-i18n="form.nameLabel">Name</label>
             <input id="name" name="Kontaktperson" type="text" autocomplete="name" maxlength="100" required aria-describedby="name-err">
             <p class="err" id="name-err" role="alert"></p>
           </div>
 
           <div class="field">
-            <label for="email">E-Mail</label>
-            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required aria-describedby="email-err">
+            <label for="email" data-i18n="form.emailLabel">E-Mail</label>
+            <input id="email" name="email" type="email" dir="ltr" inputmode="email" autocomplete="email" required aria-describedby="email-err">
             <p class="err" id="email-err" role="alert"></p>
           </div>
 
           <div class="field">
-            <label for="phone">Telefonnummer <span class="opt">(optional)</span></label>
-            <input id="phone" name="Telefon" type="tel" inputmode="tel" autocomplete="tel" maxlength="40">
+            <label for="phone"><span data-i18n="form.phoneLabel">Telefonnummer</span> <span class="opt" data-i18n="form.optional">(optional)</span></label>
+            <input id="phone" name="Telefon" type="tel" dir="ltr" inputmode="tel" autocomplete="tel" maxlength="40">
           </div>
 
           <div class="field">
-            <label for="message">Projektbeschreibung <span class="opt">(optional)</span></label>
+            <label for="message"><span data-i18n="form.messageLabel">Projektbeschreibung</span> <span class="opt" data-i18n="form.optional">(optional)</span></label>
             <textarea id="message" name="Projektbeschreibung" rows="4" maxlength="3000"></textarea>
           </div>
 
           <!-- Spam-Falle: für Menschen unsichtbar -->
           <div class="hp" aria-hidden="true">
-            <label>Nicht ausfüllen <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
+            <label><span data-i18n="form.hpLabel">Nicht ausfüllen</span> <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label>
           </div>
 
           <div class="form__submit">
-            <p class="form__privacy">Wir verwenden deine Angaben ausschließlich zur Bearbeitung deiner Anfrage. Weitere Informationen findest du in unserer <a href="datenschutz.html">Datenschutzerklärung</a>.</p>
+            <p class="form__privacy"><span data-i18n="form.privacyPrefix">Wir verwenden deine Angaben ausschließlich zur Bearbeitung deiner Anfrage. Weitere Informationen findest du in unserer </span><a href="datenschutz.html" data-i18n="form.privacyLink">Datenschutzerklärung</a><span data-i18n="form.privacySuffix">.</span></p>
             <button class="btn btn--dark btn--block btn--large" type="submit" id="submit">
-              <span class="btn__label">Anfrage senden</span>
+              <span class="btn__label" data-i18n="form.submit">Anfrage senden</span>
             </button>
-            <p class="form__hint">Unverbindliche Anfrage – es entstehen keine Kosten und kein Vertrag.</p>
+            <p class="form__hint" data-i18n="form.hint">Unverbindliche Anfrage – es entstehen keine Kosten und kein Vertrag.</p>
           </div>
           <div class="status" id="status" role="status" aria-live="polite" tabindex="-1"></div>
         </form>
@@ -383,10 +407,10 @@
 
   <footer class="footer">
     <div class="wrap footer__in">
-      <p>© SITE FOR YOU.</p>
-      <nav aria-label="Rechtliches">
-        <a href="impressum.html">Impressum</a>
-        <a href="datenschutz.html">Datenschutz</a>
+      <p dir="ltr">© SITE FOR YOU.</p>
+      <nav aria-label="Rechtliches" data-i18n-aria="footer.legalNavAria">
+        <a href="impressum.html" data-i18n="footer.impressum">Impressum</a>
+        <a href="datenschutz.html" data-i18n="footer.privacy">Datenschutz</a>
       </nav>
     </div>
   </footer>

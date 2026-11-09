@@ -233,28 +233,35 @@
   }
 
   /* ---------- Portfolio: Links & Bilder stehen bereits im HTML; config.js überschreibt nur bei Bedarf ---------- */
+  var rootPrefix = window.SFY_ROOT || "";
+  function tr(key, fallback, vars) {
+    if (window.SFY_I18N && window.SFY_I18N.t) return window.SFY_I18N.t(key, vars);
+    return fallback !== undefined ? fallback : key;
+  }
+
   $$(".project").forEach(function (card) {
-    var conf = (cfg.projects || {})[card.getAttribute("data-project")] || {};
+    var projKey = card.getAttribute("data-project");
+    var conf = (cfg.projects || {})[projKey] || {};
     var link = $(".project__link", card);
     var media = $(".project__media", card);
     var cta = $(".project__cta", card);
     var name = $("h3", card).textContent;
 
     if (conf.image) {
+      var imgPath = rootPrefix + conf.image;
       var existingImg = $("img", media);
       if (!existingImg) {
         var img = new Image();
-        img.src = conf.image;
-        img.srcset = conf.image.replace(/\.webp$/, "-720.webp") + " 720w, " + conf.image + " 1440w";
+        img.src = imgPath;
+        img.srcset = imgPath.replace(/\.webp$/, "-720.webp") + " 720w, " + imgPath + " 1440w";
         img.sizes = card.classList.contains("project--featured") ? "(min-width: 1300px) 1130px, 100vw" : "(min-width: 720px) 50vw, 100vw";
-        img.alt = "Startseite des Website-Konzepts " + name;
+        img.alt = tr("work." + projKey + "Alt", "Startseite des Website-Konzepts " + name);
+        img.setAttribute("data-i18n-alt", "work." + projKey + "Alt");
         img.width = 1440; img.height = 900;
         img.loading = card.classList.contains("project--featured") ? "eager" : "lazy";
         img.decoding = "async";
         media.appendChild(img);
         media.classList.add("has-img");
-      } else if (existingImg.getAttribute("src") !== conf.image) {
-        existingImg.src = conf.image;
       }
     }
 
@@ -263,8 +270,8 @@
       link.href = finalUrl;
       link.setAttribute("target", "_blank");
       link.setAttribute("rel", "noopener noreferrer");
-      link.setAttribute("aria-label", name + " – Website-Konzept als Live-Demo öffnen (neuer Tab)");
-      if (cta) cta.textContent = "Live-Demo";
+      link.setAttribute("aria-label", tr("work." + projKey + "Aria", name + " – Website-Konzept als Live-Demo öffnen (neuer Tab)"));
+      if (cta) setDynamicText(cta, tr("work.cta", "Live-Demo"));
       card.classList.add("is-live");
     }
   });
@@ -379,20 +386,30 @@
     }
   }
 
+  function getPkgDisplayLabel(key) {
+    if (!key) return "";
+    return tr("form.pkgLabel." + key, PKG_LABELS[key] || "");
+  }
+
+  function getCareDisplayLabel(key) {
+    if (!key) return "";
+    return tr("form.careLabel." + key, CARE_LABELS[key] || "");
+  }
+
   function renderState() {
     var isMaint = state.inquiryType === "maintenance";
     var hasWebsite = !isMaint && !!state.websitePackage;
 
-    /* 1. Preiskarten markieren + CTA-Text konsistent setzen */
+    /* 1. Preiskarten markieren + CTA-Text konsistent in aktueller Sprache setzen */
     var PLAN_CTA_DEFAULT = {
-      starter: "Starter anfragen",
-      business: "Business anfragen",
-      custom: "Projekt anfragen"
+      starter: tr("price.starter.cta", "Starter anfragen"),
+      business: tr("price.business.cta", "Business anfragen"),
+      custom: tr("price.custom.cta", "Projekt anfragen")
     };
     var PLAN_CTA_SELECTED = {
-      starter: "✓ Starter ausgewählt",
-      business: "✓ Business ausgewählt",
-      custom: "✓ Custom ausgewählt"
+      starter: tr("price.starter.ctaSelected", "✓ Starter ausgewählt"),
+      business: tr("price.business.ctaSelected", "✓ Business ausgewählt"),
+      custom: tr("price.custom.ctaSelected", "✓ Custom ausgewählt")
     };
     $$("[data-plan]").forEach(function (card) {
       var key = card.getAttribute("data-plan");
@@ -409,7 +426,7 @@
     setCollapse(careContext, hasWebsite);
     setCollapse(careSkip, hasWebsite);
     if (hasWebsite && careContextPkg) {
-      setDynamicText(careContextPkg, PKG_LABELS[state.websitePackage] || "");
+      setDynamicText(careContextPkg, getPkgDisplayLabel(state.websitePackage));
     }
 
     $$("[data-care-card]").forEach(function (card) {
@@ -422,9 +439,11 @@
       if (lbl) {
         var baseName = key === "basic" ? "Basic Care" : "Premium Care";
         if (sel) {
-          setDynamicText(lbl, "✓ " + baseName + " ausgewählt");
+          setDynamicText(lbl, tr("care." + key + ".ctaSelected", "✓ " + baseName + " ausgewählt"));
+        } else if (hasWebsite) {
+          setDynamicText(lbl, tr("care." + key + ".ctaAdd", baseName + " hinzufügen"));
         } else {
-          setDynamicText(lbl, hasWebsite ? (baseName + " hinzufügen") : (baseName + " anfragen"));
+          setDynamicText(lbl, tr("care." + key + ".ctaRequest", baseName + " anfragen"));
         }
       }
     });
@@ -459,7 +478,7 @@
 
     if (selToggle) {
       selToggle.setAttribute("aria-expanded", showPicker ? "true" : "false");
-      setDynamicText(selToggle, showPicker ? "Auswahl einklappen" : "Auswahl anpassen");
+      setDynamicText(selToggle, showPicker ? tr("form.toggleCollapse", "Auswahl einklappen") : tr("form.toggleExpand", "Auswahl anpassen"));
     }
 
     /* 6. Zusammenfassung animiert aktualisieren (jede Zeile gleitet sanft ein/aus) */
@@ -469,16 +488,20 @@
     var showCareRow = isMaint ? !!state.carePackage : (!!state.websitePackage && !!state.carePackage);
 
     if (sumEmptyTxt) {
-      setSummaryVal(sumEmptyTxt, isMaint ? "Bitte wähle Basic Care oder Premium Care." : "Bitte wähle ein Website-Paket.");
+      setSummaryVal(sumEmptyTxt, isMaint ? tr("form.emptyMaint", "Bitte wähle Basic Care oder Premium Care.") : tr("form.emptyWebsite", "Bitte wähle ein Website-Paket."));
     }
     if (showWebRow && sumWebVal) {
-      setSummaryVal(sumWebVal, PKG_LABELS[state.websitePackage]);
+      setSummaryVal(sumWebVal, getPkgDisplayLabel(state.websitePackage));
     }
     if (showCareRow && sumCareVal) {
-      setSummaryVal(sumCareVal, CARE_LABELS[state.carePackage]);
+      setSummaryVal(sumCareVal, getCareDisplayLabel(state.carePackage));
+    }
+    var sumWebTag = $("#sum-web-tag");
+    if (sumWebTag) {
+      setDynamicText(sumWebTag, tr("form.tagWebsite", "Website"));
     }
     if (sumCareTag) {
-      setDynamicText(sumCareTag, isMaint ? "Website-Betreuung" : "Betreuung");
+      setDynamicText(sumCareTag, isMaint ? tr("form.tagMaintOnly", "Website-Betreuung") : tr("form.tagCare", "Betreuung"));
     }
     if (sumRowCare) {
       sumRowCare.classList.toggle("has-top-line", showWebRow && showCareRow);
@@ -487,7 +510,10 @@
     setCollapse(sumRowWeb, showWebRow);
     setCollapse(sumRowCare, showCareRow);
 
-    if (hasCompleteSelection && selErr) selErr.textContent = "";
+    if (hasCompleteSelection && selErr) {
+      selErr.textContent = "";
+      selErr.removeAttribute("data-err-key");
+    }
   }
 
   /* 3.1 Klick auf Website-Paket → speichern & zur Website-Betreuung scrollen */
@@ -624,43 +650,55 @@
     return "SFY-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + hex;
   }
 
-  function setError(input, msg) {
-    var field = input.closest(".field");
+  function setError(input, msg, errKey) {
+    var field = input && input.closest ? input.closest(".field") : null;
     if (!field) return;
-    $(".err", field).textContent = msg;
+    var errEl = $(".err", field);
+    if (errEl) {
+      errEl.textContent = msg;
+      if (msg && errKey) errEl.setAttribute("data-err-key", errKey);
+      else errEl.removeAttribute("data-err-key");
+    }
     field.classList.toggle("is-invalid", !!msg);
     if (msg) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
   }
 
   function validate() {
     var first = null;
-    function bad(input, msg) { setError(input, msg); first = first || input; }
+    function bad(input, key, fallback) { setError(input, tr(key, fallback), key); first = first || input; }
 
     /* Auswahl prüfen */
     if (state.inquiryType === "website" && !state.websitePackage) {
       state.pickerOpen = true;
       renderState();
-      if (selErr) selErr.textContent = "Bitte wähle ein Website-Paket aus.";
+      if (selErr) {
+        selErr.textContent = tr("form.err.pkg", "Bitte wähle ein Website-Paket aus.");
+        selErr.setAttribute("data-err-key", "form.err.pkg");
+      }
       first = first || $('input[name="w_pkg"]');
     } else if (state.inquiryType === "maintenance" && !state.carePackage) {
       state.pickerOpen = true;
       renderState();
-      if (selErr) selErr.textContent = "Bitte wähle Basic Care oder Premium Care aus.";
+      if (selErr) {
+        selErr.textContent = tr("form.err.care", "Bitte wähle Basic Care oder Premium Care aus.");
+        selErr.setAttribute("data-err-key", "form.err.care");
+      }
       first = first || $('input[name="m_care"]');
     } else if (selErr) {
       selErr.textContent = "";
+      selErr.removeAttribute("data-err-key");
     }
 
-    if (!singleLine(companyInput.value, 100)) bad(companyInput, "Bitte gib den Namen deines Unternehmens an."); else setError(companyInput, "");
-    if (!singleLine(nameInput.value, 100)) bad(nameInput, "Bitte gib deinen Namen an."); else setError(companyInput === first ? nameInput : nameInput, "");
+    if (!singleLine(companyInput.value, 100)) bad(companyInput, "form.err.company", "Bitte gib den Namen deines Unternehmens an."); else setError(companyInput, "");
+    if (!singleLine(nameInput.value, 100)) bad(nameInput, "form.err.name", "Bitte gib deinen Namen an."); else setError(companyInput === first ? nameInput : nameInput, "");
     var v = emailInput.value.trim();
-    if (!v) bad(emailInput, "Bitte gib deine E-Mail-Adresse an.");
-    else if (!emailRe.test(v)) bad(emailInput, "Bitte gib eine gültige E-Mail-Adresse ein.");
+    if (!v) bad(emailInput, "form.err.emailRequired", "Bitte gib deine E-Mail-Adresse an.");
+    else if (!emailRe.test(v)) bad(emailInput, "form.err.emailInvalid", "Bitte gib eine gültige E-Mail-Adresse ein.");
     else setError(emailInput, "");
 
     /* Bestehende Website (nur Betreuung, optional) */
     if (state.inquiryType === "maintenance" && urlInput.value.trim() && !normalizeUrl(urlInput.value)) {
-      bad(urlInput, "Bitte gib eine gültige Adresse ein, z. B. https://beispiel.at");
+      bad(urlInput, "form.err.urlInvalid", "Bitte gib eine gültige Adresse ein, z. B. https://beispiel.at");
     } else setError(urlInput, "");
 
     if (first) first.focus();
@@ -683,35 +721,54 @@
     inp.addEventListener("input", function () { if (inp.closest(".field").classList.contains("is-invalid")) setError(inp, ""); });
   });
 
-  function showStatus(type, title, text, withMail) {
+  var lastStatus = null;
+
+  function showStatus(type, titleKey, textKey, withMail, vars, noFocus) {
+    lastStatus = { type: type, titleKey: titleKey, textKey: textKey, withMail: withMail, vars: vars };
     statusEl.className = "status is-visible is-" + type;
     statusEl.textContent = "";
     var strong = document.createElement("strong");
-    strong.textContent = title;
+    strong.textContent = tr(titleKey, titleKey, vars);
     var span = document.createElement("span");
-    span.textContent = text;
+    span.textContent = tr(textKey, textKey, vars);
     statusEl.appendChild(strong);
     statusEl.appendChild(span);
     if (withMail && mail) {
-      span.appendChild(document.createTextNode(" Du kannst uns auch direkt schreiben: "));
+      span.appendChild(document.createTextNode(tr("form.status.directMail", " Du kannst uns auch direkt schreiben: ")));
       var a = document.createElement("a");
       a.href = "mailto:" + mail;
+      a.dir = "ltr";
       a.textContent = mail;
       span.appendChild(a);
       span.appendChild(document.createTextNode("."));
     }
     void statusEl.offsetWidth;
     statusEl.classList.add("is-in");
-    statusEl.focus({ preventScroll: true });
+    if (!noFocus) statusEl.focus({ preventScroll: true });
   }
-  function hideStatus() { statusEl.className = "status"; statusEl.textContent = ""; }
+  function hideStatus() { lastStatus = null; statusEl.className = "status"; statusEl.textContent = ""; }
 
   function setBusy(on) {
     busy = on;
     submitBtn.disabled = on;
     submitBtn.classList.toggle("is-loading", on);
     if (on) submitBtn.setAttribute("aria-busy", "true"); else submitBtn.removeAttribute("aria-busy");
-    setDynamicText(label, on ? "Wird gesendet" : "Anfrage senden");
+    setDynamicText(label, on ? tr("form.submitting", "Wird gesendet") : tr("form.submit", "Anfrage senden"));
+  }
+
+  /* Bei Sprachwechsel alle dynamischen Zustände, Fehlermeldungen und Statusboxen sofort aktualisieren */
+  if (window.SFY_I18N && window.SFY_I18N.onChange) {
+    window.SFY_I18N.onChange(function () {
+      renderState();
+      setBusy(busy);
+      $$(".err[data-err-key]").forEach(function (errEl) {
+        var k = errEl.getAttribute("data-err-key");
+        if (k) errEl.textContent = tr(k, errEl.textContent);
+      });
+      if (lastStatus) {
+        showStatus(lastStatus.type, lastStatus.titleKey, lastStatus.textKey, lastStatus.withMail, lastStatus.vars, true);
+      }
+    });
   }
 
   form.addEventListener("submit", function (ev) {
@@ -726,18 +783,21 @@
     var endpoint = (cfg.FORMSPREE_ENDPOINT || "").trim();
     if (!endpointRe.test(endpoint)) {
       console.warn("[SITE FOR YOU.] FORMSPREE_ENDPOINT fehlt oder ist ungültig (erwartet: https://formspree.io/f/FORM_ID). Es wurde nichts gesendet.");
-      showStatus("error", "Senden derzeit nicht möglich.", "Das Formular ist noch nicht eingerichtet.", true);
+      showStatus("error", "form.status.unconfiguredTitle", "form.status.unconfiguredText", true);
       return;
     }
 
     if (!attemptRef) attemptRef = makeReference();
     if (!attemptRef) {
-      showStatus("error", "Senden nicht möglich.", "Dein Browser unterstützt die Erstellung der Anfragenummer nicht. Bitte nutze einen aktuellen Browser.", true);
+      showStatus("error", "form.status.noCryptoTitle", "form.status.noCryptoText", true);
       return;
     }
 
     var company = singleLine(companyInput.value, 100);
     var isMaint = state.inquiryType === "maintenance";
+    var activeLang = (window.SFY_I18N && window.SFY_I18N.getLang) ? window.SFY_I18N.getLang() : "de";
+    var activeLangName = (window.SFY_I18N && window.SFY_I18N.getNativeName) ? window.SFY_I18N.getNativeName(activeLang) : "Deutsch";
+
     var data = new FormData();
     data.set("Anfragenummer", attemptRef);
     data.set("Anfrageart", isMaint ? "Website-Betreuung" : "Neue Website");
@@ -754,6 +814,7 @@
     var phoneVal = singleLine($("#phone").value, 40);
     if (phoneVal) data.set("Telefon", phoneVal);
     data.set("Projektbeschreibung", ($("#message").value || "").trim());
+    data.set("Sprache", activeLang + " (" + activeLangName + ")");
     data.set("_subject", attemptRef + " | " + company);
 
     var sentRef = attemptRef;
@@ -778,11 +839,11 @@
       state.pickerOpen = true;
       renderState();
       attemptRef = null;
-      showStatus("success", "Vielen Dank!", "Deine Anfrage wurde erfolgreich übermittelt. Deine Anfragenummer: " + sentRef + ". Wir melden uns persönlich bei dir.");
+      showStatus("success", "form.status.successTitle", "form.status.successText", false, { ref: sentRef });
     }).catch(function (err) {
       /* Eingaben bleiben erhalten; attemptRef bleibt für den Wiederholungsversuch gleich */
       console.error("[SITE FOR YOU.] Formular-Fehler:", err);
-      showStatus("error", "Das hat leider nicht geklappt.", "Deine Anfrage konnte nicht übermittelt werden. Deine Eingaben sind noch vorhanden – bitte versuche es erneut.", true);
+      showStatus("error", "form.status.errorTitle", "form.status.errorText", true);
     }).then(function () {
       if (timer) clearTimeout(timer);
       setBusy(false);

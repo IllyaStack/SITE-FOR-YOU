@@ -236,22 +236,44 @@
      4) Interaktive Typografie (Wort-Hover für Haupt-Slogans, Buchstaben-Hover
         für statischen Fließ- und Oberflächentext)
      Nutzt Intl.Segmenter für korrekte Unicode-Grapheme, bewahrt Zeilenumbruch
-     durch Wort-Wrapper (.t-w) und kommt komplett ohne JS-Hover-Listener aus.
+     durch Wort-Wrapper (.t-w), erhält arabische Ligaturen (Wort-Level) und
+     unterstützt chinesische Wort-/Zeichen-Segmentierung ohne JS-Hover-Listener.
      ====================================================================== */
   (function typography() {
     if (!interactive) return;
 
-    var seg = (typeof Intl !== "undefined" && Intl.Segmenter)
-      ? new Intl.Segmenter("de", { granularity: "grapheme" })
-      : null;
+    var hasSegmenter = typeof Intl !== "undefined" && typeof Intl.Segmenter === "function";
+    var graphemeSeg = hasSegmenter ? new Intl.Segmenter("de", { granularity: "grapheme" }) : null;
+    var zhWordSeg = hasSegmenter ? new Intl.Segmenter("zh-Hans", { granularity: "word" }) : null;
+    var arabicRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+    var cjkRe = /[\u3000-\u303F\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/;
 
     function toGraphemes(str) {
-      if (seg) {
-        var out = [], it = seg.segment(str)[Symbol.iterator](), step;
+      if (graphemeSeg) {
+        var out = [], it = graphemeSeg.segment(str)[Symbol.iterator](), step;
         while (!(step = it.next()).done) out.push(step.value.segment);
         return out;
       }
       return Array.from ? Array.from(str) : str.split("");
+    }
+
+    function toZhWords(str) {
+      if (zhWordSeg) {
+        var raw = [], it = zhWordSeg.segment(str)[Symbol.iterator](), step;
+        while (!(step = it.next()).done) raw.push(step.value);
+        /* Satzzeichen direkt an das vorangehende Wort binden, damit sie nie isoliert umbrechen */
+        var merged = [];
+        for (var i = 0; i < raw.length; i++) {
+          var seg = raw[i].segment;
+          if (!raw[i].isWordLike && merged.length && /^[。，、！？：；.!?:;]$/.test(seg)) {
+            merged[merged.length - 1].text += seg;
+          } else {
+            merged.push({ text: seg, isSpace: /^\s+$/.test(seg) });
+          }
+        }
+        return merged;
+      }
+      return [{ text: str, isSpace: false }];
     }
 
     var SKIP_TAGS = {
@@ -262,23 +284,70 @@
     function shouldSkipElement(el) {
       if (!el || el.nodeType !== 1) return true;
       if (SKIP_TAGS[el.tagName]) return true;
-      if (el.hasAttribute("data-typo-done") || el.isContentEditable) return true;
+      if (el.hasAttribute("data-typo-done") || el.hasAttribute("data-typo-skip") || el.isContentEditable) return true;
       if (el.classList.contains("hp") || el.classList.contains("err") ||
           el.classList.contains("status") || el.classList.contains("arrow") ||
           el.classList.contains("plan__sel") || el.classList.contains("care__sel") ||
-          el.classList.contains("care-context__check")) {
+          el.classList.contains("care-context__check") || el.classList.contains("lang")) {
         return true;
       }
       return false;
     }
 
+    function getActiveLang() {
+      return document.documentElement.getAttribute("lang") || "de";
+    }
+
     function segmentTextNode(node, mode) {
       var raw = node.nodeValue;
       if (!raw || !/\S/.test(raw)) return;
-      var parts = raw.split(/([ \t\r\n]+)/);
+
+      var lang = getActiveLang();
+      var isArabic = lang === "ar" || arabicRe.test(raw);
+      var isCjk = lang === "zh-Hans" || cjkRe.test(raw);
+
       var segWrap = document.createElement("span");
       segWrap.className = "t-seg";
       segWrap.setAttribute("data-typo-done", "1");
+
+      /* 1. Chinesische Hauptüberschriften: lexikalische Wort-/Phrasen-Segmentierung */
+      if (isCjk && mode === "words") {
+        var zhTokens = toZhWords(raw);
+        for (var z = 0; z < zhTokens.length; z++) {
+          if (zhTokens[z].isSpace) {
+            segWrap.appendChild(document.createTextNode(zhTokens[z].text));
+          } else {
+            var zw = document.createElement("span");
+            zw.className = "t-word";
+            zw.setAttribute("data-typo-done", "1");
+            zw.textContent = zhTokens[z].text;
+            segWrap.appendChild(zw);
+          }
+        }
+        if (node.parentNode) node.parentNode.replaceChild(segWrap, node);
+        return;
+      }
+
+      /* 2. Chinesischer Fließtext: Einzelzeichen-Hover ohne nowrap-Blockade */
+      if (isCjk && mode !== "words") {
+        var cjkChars = toGraphemes(raw);
+        for (var k = 0; k < cjkChars.length; k++) {
+          var g = cjkChars[k];
+          if (/^\s+$/.test(g)) {
+            segWrap.appendChild(document.createTextNode(g));
+          } else {
+            var cs = document.createElement("span");
+            cs.className = "t-ch";
+            cs.textContent = g;
+            segWrap.appendChild(cs);
+          }
+        }
+        if (node.parentNode) node.parentNode.replaceChild(segWrap, node);
+        return;
+      }
+
+      /* 3. Arabisch & alle alphabetischen Sprachen */
+      var parts = raw.split(/([ \t\r\n]+)/);
       for (var i = 0; i < parts.length; i++) {
         var p = parts[i];
         if (!p) continue;
@@ -290,6 +359,14 @@
           w.setAttribute("data-typo-done", "1");
           w.textContent = p;
           segWrap.appendChild(w);
+        } else if (isArabic || arabicRe.test(p)) {
+          /* Arabisch: Wort als verbundene Einheit animieren, damit Buchstabenformen
+             und Ligaturen niemals durch Einzel-Spans unterbrochen werden */
+          var aw = document.createElement("span");
+          aw.className = "t-w t-w--hover";
+          aw.setAttribute("data-typo-done", "1");
+          aw.textContent = p;
+          segWrap.appendChild(aw);
         } else {
           var wWrap = document.createElement("span");
           wWrap.className = "t-w";
@@ -315,7 +392,6 @@
     function enhanceTree(root, inheritedMode) {
       if (!root || shouldSkipElement(root)) return;
       var mode = root.getAttribute("data-typo") === "words" ? "words" : (inheritedMode || "chars");
-      /* Falls root selbst ein einzelnes dynamisches Textelement ist, Rohwert merken */
       if (!root.children.length && root.textContent && !root.hasAttribute("data-raw-text")) {
         root.setAttribute("data-raw-text", root.textContent);
       }
@@ -334,6 +410,10 @@
       if (!el) return;
       var mode = (el.closest && el.closest('[data-typo="words"]')) ? "words" : "chars";
       enhanceTree(el, mode);
+    };
+
+    window.SFY_TYPO_REBUILD = function () {
+      enhanceTree(document.body, "chars");
     };
 
     enhanceTree(document.body, "chars");
