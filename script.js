@@ -6,13 +6,61 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  /* ---------- Header & subtiler Tiefen-Impuls bei Abschnittswechseln ---------- */
+  /* ---------- Header, Sticky-Metriken & subtiler Tiefen-Impuls bei Abschnittswechseln ---------- */
   var header = $("#header");
   var hero = $(".hero");
   var contactSection = $("#kontakt");
   var veil = $("#depth-veil");
-  var sectionHeads = $$(".section__head");
   var veilTimer = 0;
+
+  /* Stellt sicher, dass die inneren Sticky-Wrapper in allen Sprachversionen vorhanden sind */
+  (function ensureStickyWrappers() {
+    var intro = $(".contact__intro");
+    if (intro && !$(".contact__sticky", intro)) {
+      var sticky = document.createElement("div");
+      sticky.className = "contact__sticky";
+      sticky.id = "contact-sticky";
+      while (intro.firstChild) sticky.appendChild(intro.firstChild);
+      intro.appendChild(sticky);
+    }
+    $$(".section__head").forEach(function (head) {
+      if (!$(".section__head-in", head)) {
+        var inner = document.createElement("div");
+        inner.className = "section__head-in";
+        while (head.firstChild) inner.appendChild(head.firstChild);
+        head.appendChild(inner);
+      }
+    });
+  })();
+
+  var contactSticky = $("#contact-sticky") || $(".contact__sticky", contactSection);
+
+  function syncStickyMetrics() {
+    var vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+    var vh = window.innerHeight || document.documentElement.clientHeight || 800;
+    var hh = header ? Math.round(header.getBoundingClientRect().height || header.offsetHeight || (vw >= 720 ? 76 : 64)) : (vw >= 720 ? 76 : 64);
+    document.documentElement.style.setProperty("--header-h", hh + "px");
+
+    if (!contactSticky) return;
+    if (vw < 900) {
+      contactSticky.classList.remove("is-sticky-disabled");
+      document.documentElement.style.removeProperty("--contact-sticky-top");
+      return;
+    }
+
+    var idealPad = Math.round(Math.max(18, Math.min(40, vh * 0.04)));
+    var stickyTop = hh + idealPad;
+    var stickyH = contactSticky.offsetHeight || 0;
+    var bottomMargin = 20;
+
+    if (stickyTop + stickyH + bottomMargin > vh) {
+      stickyTop = Math.max(hh + 12, vh - stickyH - bottomMargin);
+    }
+
+    var cannotFit = (hh + 12 + stickyH + 12) > vh;
+    contactSticky.classList.toggle("is-sticky-disabled", cannotFit);
+    document.documentElement.style.setProperty("--contact-sticky-top", stickyTop + "px");
+  }
 
   function onScroll() {
     var y = window.scrollY;
@@ -27,21 +75,13 @@
       header.classList.toggle("is-solid", pastHero && !inDarkContact);
       header.classList.toggle("is-dark-section", inDarkContact);
     }
-    /* Sehr dezente Parallaxe der Abschnittsüberschriften */
-    if (!reduceMotion) {
-      var vh = window.innerHeight || 800;
-      for (var i = 0; i < sectionHeads.length; i++) {
-        var r = sectionHeads[i].getBoundingClientRect();
-        if (r.bottom > -100 && r.top < vh + 100) {
-          var norm = (r.top + r.height * 0.5 - vh * 0.5) / vh;
-          var py = Math.max(-7, Math.min(7, -norm * 10));
-          sectionHeads[i].style.setProperty("--py", py.toFixed(1) + "px");
-        }
-      }
-    }
   }
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll);
+  window.addEventListener("resize", function () {
+    syncStickyMetrics();
+    onScroll();
+  });
+  syncStickyMetrics();
   onScroll();
 
   function pulseDepth() {
@@ -201,10 +241,11 @@
   if ("IntersectionObserver" in window && !reduceMotion) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
-        if (e.intersectionRatio >= 0.12) e.target.classList.add("is-in");
+        var minRatio = e.target.classList.contains("contact__intro") ? 0.04 : 0.12;
+        if (e.intersectionRatio >= minRatio) e.target.classList.add("is-in");
         else if (!e.isIntersecting) e.target.classList.remove("is-in");
       });
-    }, { threshold: [0, 0.12], rootMargin: "0px 0px -40px 0px" });
+    }, { threshold: [0, 0.04, 0.12], rootMargin: "0px 0px -40px 0px" });
     reveals.forEach(function (el) { io.observe(el); });
 
     if (form) {
@@ -283,6 +324,7 @@
     ml.href = "mailto:" + mail;
     ml.textContent = mail;
     $("#mail-fallback").hidden = false;
+    syncStickyMetrics();
   }
 
   /* ======================================================================
@@ -761,6 +803,7 @@
     window.SFY_I18N.onChange(function () {
       renderState();
       setBusy(busy);
+      syncStickyMetrics();
       $$(".err[data-err-key]").forEach(function (errEl) {
         var k = errEl.getAttribute("data-err-key");
         if (k) errEl.textContent = tr(k, errEl.textContent);

@@ -89,8 +89,10 @@
     <section class="section" id="arbeiten" aria-labelledby="work-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="work-title" data-typo="words" data-i18n="work.title">Selected Work.</h2>
-          <p data-i18n="work.subtitle">Three distinct website concepts.</p>
+          <div class="section__head-in">
+            <h2 id="work-title" data-typo="words" data-i18n="work.title">Selected Work.</h2>
+            <p data-i18n="work.subtitle">Three distinct website concepts.</p>
+          </div>
         </div>
 
         <div class="work">
@@ -147,7 +149,9 @@
     <section class="section section--alt" id="preise" aria-labelledby="price-title">
       <div class="wrap">
         <div class="section__head reveal">
-          <h2 id="price-title" data-typo="words" data-i18n="price.title">Simple. Transparent. Fast.</h2>
+          <div class="section__head-in">
+            <h2 id="price-title" data-typo="words" data-i18n="price.title">Simple. Transparent. Fast.</h2>
+          </div>
         </div>
 
         <div class="plans">
@@ -205,8 +209,10 @@
     <section class="section" id="betreuung" aria-labelledby="care-title">
       <div class="wrap" id="care-wrap">
         <div class="section__head reveal">
-          <h2 id="care-title" data-typo="words" data-i18n="care.title">Website Care.</h2>
-          <p data-i18n="care.subtitle">If you wish, we also look after your website after launch.</p>
+          <div class="section__head-in">
+            <h2 id="care-title" data-typo="words" data-i18n="care.title">Website Care.</h2>
+            <p data-i18n="care.subtitle">If you wish, we also look after your website after launch.</p>
+          </div>
         </div>
 
         <!-- Erscheint nur, wenn zuvor ein Website-Paket gewählt wurde -->
@@ -267,11 +273,13 @@
     <section class="contact" id="kontakt" aria-labelledby="contact-title">
       <div class="wrap contact__in" id="contact-wrap">
         <div class="contact__intro reveal">
-          <h2 id="contact-title" data-typo="words" data-i18n="form.title">Ready for your new website?</h2>
-          <p data-i18n="form.intro">Tell us briefly about your project. We will get back to you personally.</p>
-          <p class="contact__fallback" id="mail-fallback" hidden>
-            <span data-i18n="form.mailFallbackPrefix">Prefer email?</span> <a id="mail-link" href="#" dir="ltr"></a>
-          </p>
+          <div class="contact__sticky" id="contact-sticky">
+            <h2 id="contact-title" data-typo="words" data-i18n="form.title">Ready for your new website?</h2>
+            <p data-i18n="form.intro">Tell us briefly about your project. We will get back to you personally.</p>
+            <p class="contact__fallback" id="mail-fallback" hidden>
+              <span data-i18n="form.mailFallbackPrefix">Prefer email?</span> <a id="mail-link" href="#" dir="ltr"></a>
+            </p>
+          </div>
         </div>
 
         <form class="form form-seq" id="form" novalidate>

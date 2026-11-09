@@ -1,16 +1,19 @@
 /* ==========================================================================
    SITE FOR YOU. — Unified Animated Background System & Interactive Effects
-   1) Global Pointer & Section Atmosphere Tracker (--atmo-x / --atmo-y)
-   2) Multi-Layered Continuously Flowing Hero Wave Field (#hero-fx)
-   3) Section-Specific Interactive Vector Background System (.sec-fx):
+   1) Global Pointer & Controlled Section Glow State Machine:
+      Cursor glow → smooth fade-out (420 ms) → invisible coordinate reset →
+      default ambient glow fade-in (640 ms) → continuous ambient drift.
+   2) Refined Single-Family Hero Wave Field (#hero-fx) & Section Vector System (.sec-fx):
+      - .hero:      Expressive harmonic filament field (consolidated, no duplicate layers)
       - #arbeiten:  Light Topographic Contour Waves
       - #preise:    Structured Precision Wave-Grid Hybrid
       - #betreuung: Calm Technical Radial-Contour Field
-      - #kontakt:   Deep Atmospheric Finale Wave Field
-   4) 3D Portfolio Card Tilt & Glare (.project)
-   5) Pointer-Reactive Surface Illumination (.plan, .care__item, .summary, .rc)
-   6) Multilingual Interactive Typography (.t-word, .t-w--hover, .t-ch)
-   All background layers use pointer-events: none, never blur text, pause when
+      - #kontakt:   Quiet Nocturnal Finale Wave Field (consolidated, no duplicate layers)
+   3) 3D Portfolio Card Tilt, Glare & Cinematic Focus Blur (.project)
+   4) Pointer-Reactive Surface Illumination (.plan, .care__item, .summary, .rc, .btn)
+   5) Multilingual Interactive Typography (.t-word, .t-w--hover, .t-ch) +
+      Delegated Neighboring-Letter Underline Ripple (.is-u1, .is-u2)
+   All background layers use pointer-events: none, never blur active text, pause when
    offscreen, and respect prefers-reduced-motion.
    ========================================================================== */
 (function () {
@@ -21,8 +24,17 @@
   var interactive = finePointer && !reduceMotion;
 
   /* ======================================================================
-     0) Globaler Zeiger-Zustand (weich gedämpft für das gesamte Interface)
+     0) Globaler Zeiger-Zustand & Sanfte Glow-Zustandsmaschine
+        Regel: Ein sichtbares Lichtfeld springt oder teleportiert niemals.
+        Cursor-Licht → sanftes Ausblenden an letzter Position (420 ms) →
+        unsichtbares Zurücksetzen auf Standardposition (bei alpha = 0) →
+        sanftes Einblenden des ruhigen Standard-Lichtfelds (640 ms).
      ====================================================================== */
+  var FADE_OUT_MS = 420;
+  var FADE_IN_AMBIENT_MS = 640;
+  var ENTER_CROSSFADE_OUT_MS = 160;
+  var ENTER_FADE_IN_MS = 320;
+
   var pointer = {
     rawX: window.innerWidth * 0.5,
     rawY: window.innerHeight * 0.4,
@@ -47,37 +59,241 @@
   }
 
   function stepGlobalPointer() {
-    pointer.x += (pointer.rawX - pointer.x) * 0.14;
-    pointer.y += (pointer.rawY - pointer.y) * 0.14;
+    pointer.x += (pointer.rawX - pointer.x) * 0.16;
+    pointer.y += (pointer.rawY - pointer.y) * 0.16;
   }
 
-  /* Aktualisiert die atmosphärischen Licht-Koordinaten (--atmo-x, --atmo-y) einer Sektion */
-  function updateSectionAtmosphere(el, rect, timeSec, phaseOffset) {
-    if (!el || !rect.width || !rect.height) return;
-    var ax, ay;
-    var inside = pointer.active &&
-      pointer.rawY >= rect.top - 120 &&
-      pointer.rawY <= rect.bottom + 120;
+  function easeOutCubic(t) {
+    var inv = 1 - Math.min(1, Math.max(0, t));
+    return 1 - inv * inv * inv;
+  }
 
-    if (inside) {
-      var relX = ((pointer.x - rect.left) / rect.width) * 100;
-      var relY = ((pointer.y - rect.top) / rect.height) * 100;
-      ax = Math.min(86, Math.max(14, relX));
-      ay = Math.min(84, Math.max(16, relY));
-    } else {
-      ax = 50 + Math.sin(timeSec * 0.32 + phaseOffset) * 14;
-      ay = 42 + Math.cos(timeSec * 0.25 + phaseOffset * 1.3) * 10;
+  function easeInOutCubic(t) {
+    var x = Math.min(1, Math.max(0, t));
+    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  }
+
+  function clamp(min, max, val) {
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function createGlowController(el, phaseOffset) {
+    var glow = {
+      el: el,
+      phase: phaseOffset || 0,
+      state: "ambient", /* "ambient" | "entering-fade-out" | "cursor" | "fading-out" | "fading-in-ambient" */
+      alpha: 1,
+      cursorAlpha: 0,
+      pctX: 50,
+      pctY: 42,
+      localX: 0,
+      localY: 0,
+      initedLocal: false,
+      hovered: false,
+      stateStart: 0,
+      fromAlpha: 1,
+      fromCursorAlpha: 0,
+      resetDoneCount: 0
+    };
+
+    function getDefaultPct(timeSec) {
+      return {
+        x: 50 + Math.sin(timeSec * 0.32 + glow.phase) * 14,
+        y: 42 + Math.cos(timeSec * 0.25 + glow.phase * 1.3) * 10
+      };
     }
-    el.style.setProperty("--atmo-x", ax.toFixed(1) + "%");
-    el.style.setProperty("--atmo-y", ay.toFixed(1) + "%");
+
+    function triggerEnter(rect, clientX, clientY, now) {
+      if (!rect || !rect.width || !rect.height) return;
+      var tx = clamp(0, rect.width, clientX - rect.left);
+      var ty = clamp(0, rect.height, clientY - rect.top);
+      var entryPctX = clamp(14, 86, (tx / rect.width) * 100);
+      var entryPctY = clamp(16, 84, (ty / rect.height) * 100);
+      var dist = Math.hypot(entryPctX - glow.pctX, entryPctY - glow.pctY);
+
+      if (glow.state === "fading-out") {
+        /* Schneller Wiedereintritt während des Ausblendens */
+        if (dist <= 16 || glow.alpha <= 0.04) {
+          if (glow.alpha <= 0.04) {
+            glow.localX = tx;
+            glow.localY = ty;
+            glow.pctX = entryPctX;
+            glow.pctY = entryPctY;
+          }
+          glow.state = "cursor";
+          glow.fromAlpha = glow.alpha;
+          glow.fromCursorAlpha = glow.cursorAlpha;
+          glow.stateStart = now;
+        } else {
+          /* Eintritt weit entfernt: erst auf 0 fertig ausblenden, dann unsichtbar umsetzen */
+          glow.state = "entering-fade-out";
+          glow.fromAlpha = glow.alpha;
+          glow.fromCursorAlpha = glow.cursorAlpha;
+          glow.stateStart = now;
+        }
+      } else if (glow.alpha > 0.05 && dist > 12) {
+        /* Sanfter Crossfade, damit das Licht beim Eintritt weit abseits der Mitte niemals springt */
+        glow.state = "entering-fade-out";
+        glow.fromAlpha = glow.alpha;
+        glow.fromCursorAlpha = glow.cursorAlpha;
+        glow.stateStart = now;
+      } else {
+        if (glow.alpha <= 0.05 || !glow.initedLocal) {
+          glow.localX = tx;
+          glow.localY = ty;
+          glow.pctX = entryPctX;
+          glow.pctY = entryPctY;
+          glow.initedLocal = true;
+        }
+        glow.state = "cursor";
+        glow.fromAlpha = glow.alpha;
+        glow.fromCursorAlpha = glow.cursorAlpha;
+        glow.stateStart = now;
+      }
+    }
+
+    function triggerLeave(now) {
+      if (glow.state === "ambient" || glow.state === "fading-in-ambient" || glow.state === "fading-out") {
+        return;
+      }
+      /* Letzte bekannte Position einfrieren und dort sanft auf 0 ausblenden */
+      glow.state = "fading-out";
+      glow.fromAlpha = glow.alpha;
+      glow.fromCursorAlpha = glow.cursorAlpha;
+      glow.stateStart = now;
+    }
+
+    if (interactive && el) {
+      el.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "mouse") return;
+        pointer.rawX = e.clientX;
+        pointer.rawY = e.clientY;
+        pointer.active = true;
+        var rect = el.getBoundingClientRect();
+        glow.hovered = true;
+        triggerEnter(rect, e.clientX, e.clientY, performance.now());
+      }, { passive: true });
+
+      el.addEventListener("pointerleave", function (e) {
+        if (e.pointerType && e.pointerType !== "mouse") return;
+        glow.hovered = false;
+        triggerLeave(performance.now());
+      }, { passive: true });
+    }
+
+    glow.step = function (rect, now, timeSec) {
+      if (!rect || !rect.width || !rect.height) return;
+      var def = getDefaultPct(timeSec);
+
+      if (!glow.initedLocal) {
+        glow.localX = rect.width * (def.x / 100);
+        glow.localY = rect.height * (def.y / 100);
+        glow.pctX = def.x;
+        glow.pctY = def.y;
+        glow.initedLocal = true;
+      }
+
+      /* Geometrische Prüfung (z. B. wenn durch Scrollen die Sektion unter dem Mauszeiger wechselt) */
+      var insideGeom = interactive && pointer.active &&
+        pointer.rawY >= rect.top &&
+        pointer.rawY <= rect.bottom &&
+        pointer.rawX >= rect.left &&
+        pointer.rawX <= rect.right;
+
+      if (insideGeom && !glow.hovered && glow.state !== "cursor" && glow.state !== "entering-fade-out") {
+        glow.hovered = true;
+        triggerEnter(rect, pointer.rawX, pointer.rawY, now);
+      } else if (!insideGeom && glow.hovered) {
+        glow.hovered = false;
+        triggerLeave(now);
+      }
+
+      if (glow.state === "fading-out") {
+        var pOut = Math.min(1, Math.max(0, (now - glow.stateStart) / FADE_OUT_MS));
+        var kOut = 1 - easeOutCubic(pOut);
+        glow.alpha = glow.fromAlpha * kOut;
+        glow.cursorAlpha = glow.fromCursorAlpha * kOut;
+        /* WICHTIG: glow.pctX, glow.pctY, glow.localX, glow.localY bleiben während des Ausblendens
+           exakt an ihrer letzten bekannten Position eingefroren! */
+        if (pOut >= 1) {
+          glow.alpha = 0;
+          glow.cursorAlpha = 0;
+          /* Erst bei vollständiger Unsichtbarkeit (alpha = 0) Position auf Standard zurücksetzen */
+          glow.pctX = def.x;
+          glow.pctY = def.y;
+          glow.localX = rect.width * (def.x / 100);
+          glow.localY = rect.height * (def.y / 100);
+          glow.resetDoneCount++;
+          glow.state = "fading-in-ambient";
+          glow.stateStart = now;
+        }
+      } else if (glow.state === "fading-in-ambient") {
+        var pIn = Math.min(1, Math.max(0, (now - glow.stateStart) / FADE_IN_AMBIENT_MS));
+        glow.pctX = def.x;
+        glow.pctY = def.y;
+        glow.localX = rect.width * (def.x / 100);
+        glow.localY = rect.height * (def.y / 100);
+        glow.alpha = easeInOutCubic(pIn);
+        glow.cursorAlpha = 0;
+        if (pIn >= 1) {
+          glow.alpha = 1;
+          glow.state = "ambient";
+        }
+      } else if (glow.state === "entering-fade-out") {
+        var pCross = Math.min(1, Math.max(0, (now - glow.stateStart) / ENTER_CROSSFADE_OUT_MS));
+        var kCross = 1 - easeOutCubic(pCross);
+        glow.alpha = glow.fromAlpha * kCross;
+        glow.cursorAlpha = glow.fromCursorAlpha * kCross;
+        if (pCross >= 1) {
+          glow.alpha = 0;
+          glow.cursorAlpha = 0;
+          var tx0 = clamp(0, rect.width, pointer.rawX - rect.left);
+          var ty0 = clamp(0, rect.height, pointer.rawY - rect.top);
+          glow.localX = tx0;
+          glow.localY = ty0;
+          glow.pctX = clamp(14, 86, (tx0 / rect.width) * 100);
+          glow.pctY = clamp(16, 84, (ty0 / rect.height) * 100);
+          glow.state = "cursor";
+          glow.fromAlpha = 0;
+          glow.fromCursorAlpha = 0;
+          glow.stateStart = now;
+        }
+      } else if (glow.state === "cursor") {
+        var tx = clamp(0, rect.width, pointer.rawX - rect.left);
+        var ty = clamp(0, rect.height, pointer.rawY - rect.top);
+        glow.localX += (tx - glow.localX) * 0.2;
+        glow.localY += (ty - glow.localY) * 0.2;
+        glow.pctX = clamp(14, 86, (glow.localX / rect.width) * 100);
+        glow.pctY = clamp(16, 84, (glow.localY / rect.height) * 100);
+
+        var pCur = Math.min(1, Math.max(0, (now - glow.stateStart) / ENTER_FADE_IN_MS));
+        var kCur = easeOutCubic(pCur);
+        glow.alpha = glow.fromAlpha + (1 - glow.fromAlpha) * kCur;
+        glow.cursorAlpha = glow.fromCursorAlpha + (1 - glow.fromCursorAlpha) * kCur;
+      } else {
+        /* "ambient" */
+        glow.pctX = def.x;
+        glow.pctY = def.y;
+        glow.localX = rect.width * (def.x / 100);
+        glow.localY = rect.height * (def.y / 100);
+        glow.alpha = 1;
+        glow.cursorAlpha = 0;
+      }
+
+      el.style.setProperty("--atmo-x", glow.pctX.toFixed(1) + "%");
+      el.style.setProperty("--atmo-y", glow.pctY.toFixed(1) + "%");
+      el.style.setProperty("--atmo-alpha", glow.alpha.toFixed(3));
+    };
+
+    if (el) el._sfyGlow = glow;
+    return glow;
   }
 
   /* ======================================================================
-     1) Hero Multi-Layered Flowing Wave Field (#hero-fx)
-     3 abgestimmte Tiefenebenen:
-     - Ebene 0 (Hintergrund): Weite, ruhige Horizont-Wellen (0.45x Parallaxe)
-     - Ebene 1 (Hauptfeld):   Kontinuierlich fließendes, elastisches Fadenfeld
-     - Ebene 2 (Oberton):     Feine Gegenphasen-Fäden + lokaler Cursor-Glanz
+     1) Hero Wave Field (#hero-fx)
+        Konsolidiertes, harmonisch fließendes Fadenfeld ohne überlappende
+        Duplikat-Wellen. Tiefe entsteht durch subtile Phasen- und Kontrast-
+        abstufung zwischen Haupt- und Nebenfäden derselben Wellenfamilie.
      ====================================================================== */
   (function heroWaveField() {
     var canvas = document.getElementById("hero-fx");
@@ -85,19 +301,18 @@
     if (!canvas || !canvas.getContext || !hero) return;
     var ctx = canvas.getContext("2d");
 
-    var PRIMARY_ALPHA = 0.088;
-    var DEEP_ALPHA = 0.036;
-    var CREST_ALPHA = 0.044;
+    var PRIMARY_ALPHA = 0.072;
+    var SUB_ALPHA = 0.038;
     var RADIUS = 230;
-    var MAX_PULL = 26;
+    var MAX_PULL = 24;
     var STIFFNESS = 0.072;
     var DAMPING = 0.82;
 
     var w = 0, h = 0, rows = 0, cols = 0;
     var baseX, baseY, offX, offY, velX, velY, curX, curY;
-    var deepRows = 0;
     var visible = true, rafId = 0;
     var t0 = performance.now();
+    var glow = createGlowController(hero, 0.0);
 
     function build() {
       w = hero.clientWidth;
@@ -108,11 +323,10 @@
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      var spacing = w < 720 ? 33 : 28;
+      var spacing = w < 720 ? 36 : 32;
       var step = w < 720 ? 30 : 25;
       rows = Math.ceil(h / spacing) + 1;
       cols = Math.ceil(w / step) + 1;
-      deepRows = Math.max(6, Math.ceil(h / (spacing * 2.2)));
 
       var n = rows * cols;
       baseX = new Float32Array(n);
@@ -128,15 +342,16 @@
         for (var c = 0; c < cols; c++) {
           var i = r * cols + c;
           baseX[i] = c * step;
-          baseY[i] = 20 + r * spacing;
+          baseY[i] = 22 + r * spacing;
         }
       }
-      renderFrame((performance.now() - t0) * 0.001);
+      var now = performance.now();
+      renderFrame(now, (now - t0) * 0.001);
     }
 
-    function tracePrimaryPath(targetCtx) {
+    function traceRowsByParity(targetCtx, parity) {
       targetCtx.beginPath();
-      for (var r = 0; r < rows; r++) {
+      for (var r = parity; r < rows; r += 2) {
         var b = r * cols;
         targetCtx.moveTo(curX[b], curY[b]);
         for (var c = 1; c < cols - 1; c++) {
@@ -150,26 +365,21 @@
       }
     }
 
-    function renderFrame(timeSec) {
+    function renderFrame(now, timeSec) {
       if (!w || !h) return;
       var rect = hero.getBoundingClientRect();
-      updateSectionAtmosphere(hero, rect, timeSec, 0.0);
-
-      var px = pointer.x - rect.left;
-      var py = pointer.y - rect.top;
-      var heroActive = interactive && pointer.active &&
-        pointer.rawY >= rect.top - 40 &&
-        pointer.rawY <= rect.bottom + 40 &&
-        pointer.rawX >= rect.left &&
-        pointer.rawX <= rect.right;
-
-      var R2 = RADIUS * RADIUS;
       var flowT = reduceMotion ? 0 : timeSec;
+      glow.step(rect, now, flowT);
 
-      /* 1. Knotenpositionen (kontinuierlicher Wellenfluss + Maus-Federphysik) berechnen */
+      var px = glow.localX;
+      var py = glow.localY;
+      var cStrength = glow.cursorAlpha;
+      var R2 = RADIUS * RADIUS;
+
+      /* Knotenpositionen (kontinuierlicher Wellenfluss + gedämpfte Maus-Federphysik) */
       for (var r = 0; r < rows; r++) {
-        var rowPhase = r * 0.38;
-        var rowCounter = r * 0.23;
+        var rowPhase = r * 0.36;
+        var rowCounter = r * 0.21;
         var b = r * cols;
         for (var c = 0; c < cols; c++) {
           var i = b + c;
@@ -177,27 +387,26 @@
           var by = baseY[i];
 
           var waveY =
-            Math.sin(bx * 0.0044 + rowPhase + flowT * 0.68) * 6.8 +
-            Math.cos(bx * 0.0102 - rowCounter - flowT * 0.44) * 2.8 +
-            Math.sin(bx * 0.0021 - rowPhase * 0.6 + flowT * 0.27) * 3.4;
+            Math.sin(bx * 0.0042 + rowPhase + flowT * 0.62) * 6.4 +
+            Math.cos(bx * 0.0096 - rowCounter - flowT * 0.40) * 2.5 +
+            Math.sin(bx * 0.0020 - rowPhase * 0.55 + flowT * 0.25) * 3.0;
           var waveX =
-            Math.cos(by * 0.006 + rowPhase * 0.5 + flowT * 0.4) * 1.8;
+            Math.cos(by * 0.0055 + rowPhase * 0.45 + flowT * 0.36) * 1.6;
 
           var rx = bx + waveX;
           var ry = by + waveY;
 
           var tx = 0, ty = 0;
-          if (heroActive) {
+          if (cStrength > 0.01) {
             var dx = px - rx;
             var dy = py - ry;
             var d2 = dx * dx + dy * dy;
             if (d2 < R2 && d2 > 0.01) {
               var d = Math.sqrt(d2);
-              var f = 1 - d / RADIUS;
-              var pull = Math.min(MAX_PULL * f * f, d * 0.52) / d;
-              /* Sanfte Kombination aus Anziehung und vertikaler Wellen-Wölbung */
+              var f = (1 - d / RADIUS) * cStrength;
+              var pull = Math.min(MAX_PULL * f * f, d * 0.5) / d;
               tx = dx * pull * 0.85;
-              ty = dy * pull + Math.sin(f * Math.PI) * 3.2;
+              ty = dy * pull + Math.sin(f * Math.PI) * 2.8;
             }
           }
 
@@ -217,77 +426,36 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      /* Ebene 0: Tiefe atmosphärische Horizont-Wellen (Hintergrund) */
-      ctx.beginPath();
-      var deepStepX = Math.max(36, Math.round(w / 28));
-      var deepSpacingY = h / Math.max(1, deepRows);
-      for (var dr = 0; dr <= deepRows; dr++) {
-        var baseDeepY = 34 + dr * deepSpacingY;
-        var prevX = 0, prevY = 0;
-        for (var dxPos = 0; dxPos <= w + deepStepX; dxPos += deepStepX) {
-          var xClamped = Math.min(w, dxPos);
-          var dyWave =
-            Math.sin(xClamped * 0.0029 + dr * 0.65 - flowT * 0.36) * 14 +
-            Math.cos(xClamped * 0.0064 - dr * 0.4 + flowT * 0.22) * 5.5;
-          var wy = baseDeepY + dyWave;
-          var wx = xClamped;
-          if (heroActive) {
-            var ddx = px - wx, ddy = py - wy;
-            var dd2 = ddx * ddx + ddy * ddy;
-            var deepR = RADIUS * 1.25;
-            if (dd2 < deepR * deepR && dd2 > 1) {
-              var dd = Math.sqrt(dd2);
-              var df = 1 - dd / deepR;
-              wy += (ddy / dd) * (df * df * 11);
-            }
-          }
-          if (dxPos === 0) {
-            ctx.moveTo(wx, wy);
-          } else {
-            ctx.quadraticCurveTo(prevX, prevY, (prevX + wx) * 0.5, (prevY + wy) * 0.5);
-          }
-          prevX = wx; prevY = wy;
-        }
-      }
-      ctx.lineWidth = 1.25;
-      ctx.strokeStyle = "rgba(250, 250, 248, " + DEEP_ALPHA + ")";
+      /* Ungerade Reihen: feinere, zurückgenommene Tiefenfäden (kein Überlappen, klare Geometrie) */
+      traceRowsByParity(ctx, 1);
+      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "rgba(250, 250, 248, " + SUB_ALPHA + ")";
       ctx.stroke();
 
-      /* Ebene 2 (Oberton-Fäden): Jede 2. Reihe leicht phasenversetzt für feine Tiefe */
-      ctx.beginPath();
-      for (var cr = 0; cr < rows; cr += 2) {
-        var cb = cr * cols;
-        for (var cc = 0; cc < cols; cc++) {
-          var ci = cb + cc;
-          var cx = curX[ci];
-          var cy = curY[ci] + Math.sin(cx * 0.0075 - cr * 0.5 - flowT * 0.54) * 4.2 + 5.5;
-          if (cc === 0) {
-            ctx.moveTo(cx, cy);
-          } else {
-            var prevI = ci - 1;
-            var px0 = curX[prevI];
-            var py0 = curY[prevI] + Math.sin(px0 * 0.0075 - cr * 0.5 - flowT * 0.54) * 4.2 + 5.5;
-            ctx.quadraticCurveTo(px0, py0, (px0 + cx) * 0.5, (py0 + cy) * 0.5);
-          }
-        }
-      }
-      ctx.lineWidth = 0.75;
-      ctx.strokeStyle = "rgba(250, 250, 248, " + CREST_ALPHA + ")";
-      ctx.stroke();
-
-      /* Ebene 1 (Haupt-Fadenfeld) */
-      tracePrimaryPath(ctx);
+      /* Gerade Reihen: primäre Ausdrucksfäden */
+      traceRowsByParity(ctx, 0);
       ctx.lineWidth = 1;
       ctx.strokeStyle = "rgba(250, 250, 248, " + PRIMARY_ALPHA + ")";
       ctx.stroke();
 
-      /* Lokaler Cursor-Glanz direkt auf den Vektorlinien (niemals über Text) */
-      if (heroActive) {
+      /* Lokaler Cursor-Glanz entlang der Linien (blendet mit cursorAlpha an letzter Position sanft aus) */
+      if (cStrength > 0.008) {
+        ctx.beginPath();
+        for (var rAll = 0; rAll < rows; rAll++) {
+          var bAll = rAll * cols;
+          ctx.moveTo(curX[bAll], curY[bAll]);
+          for (var cAll = 1; cAll < cols - 1; cAll++) {
+            var idx = bAll + cAll;
+            ctx.quadraticCurveTo(curX[idx], curY[idx], (curX[idx] + curX[idx + 1]) * 0.5, (curY[idx] + curY[idx + 1]) * 0.5);
+          }
+          var lastIdx = bAll + cols - 1;
+          ctx.lineTo(curX[lastIdx], curY[lastIdx]);
+        }
         var grad = ctx.createRadialGradient(px, py, 8, px, py, RADIUS * 1.08);
-        grad.addColorStop(0, "rgba(250, 250, 248, 0.16)");
-        grad.addColorStop(0.5, "rgba(250, 250, 248, 0.065)");
+        grad.addColorStop(0, "rgba(250, 250, 248, " + (0.145 * cStrength).toFixed(3) + ")");
+        grad.addColorStop(0.5, "rgba(250, 250, 248, " + (0.058 * cStrength).toFixed(3) + ")");
         grad.addColorStop(1, "rgba(250, 250, 248, 0)");
-        ctx.lineWidth = 1.15;
+        ctx.lineWidth = 1.1;
         ctx.strokeStyle = grad;
         ctx.stroke();
       }
@@ -297,7 +465,7 @@
       rafId = 0;
       if (!visible || document.hidden || reduceMotion) return;
       stepGlobalPointer();
-      renderFrame((now - t0) * 0.001);
+      renderFrame(now, (now - t0) * 0.001);
       rafId = requestAnimationFrame(loop);
     }
 
@@ -345,12 +513,6 @@
 
   /* ======================================================================
      2) Unified Section Background System (.sec-fx)
-     Verbindet alle Sektionen (#arbeiten, #preise, #betreuung, #kontakt, .legal)
-     zu einer gemeinsamen visuellen Familie mit sektionsspezifischer Charakteristik:
-     - "work"    (#arbeiten):  Sanfte topografische Konturwellen (hell)
-     - "pricing" (#preise):    Strukturiertes Präzisions-Wellen-Raster (hell-alt)
-     - "care"    (#betreuung): Ruhiges technisches Radial- & Trägerwellen-Feld
-     - "contact" (#kontakt):   Tiefes atmosphärisches Finale-Wellenfeld (dunkel)
      ====================================================================== */
   (function sectionBackgroundSystem() {
     var specs = [
@@ -385,10 +547,7 @@
         w: 0,
         h: 0,
         visible: false,
-        /* Geglätteter lokaler Cursor für weiche Trägheit in jeder Sektion */
-        lx: 0,
-        ly: 0,
-        strength: 0
+        glow: createGlowController(el, phase)
       };
 
       inst.resize = function () {
@@ -401,17 +560,13 @@
         canvas.width = Math.round(cw * dpr);
         canvas.height = Math.round(ch * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        if (!inst.lx && !inst.ly) {
-          inst.lx = cw * 0.5;
-          inst.ly = ch * 0.45;
-        }
-        drawSection(inst, (performance.now() - t0) * 0.001);
+        var now = performance.now();
+        drawSection(inst, now, (now - t0) * 0.001);
       };
 
       return inst;
     }
 
-    /* Lokale Auslenkung eines Punktes (x, y) durch den Mauszeiger berechnen */
     function cursorDeflect(x, y, px, py, radius, maxPull, strength) {
       if (strength <= 0.005) return { dx: 0, dy: 0, prox: 0 };
       var vx = px - x;
@@ -424,85 +579,61 @@
       var pull = Math.min(maxPull * f * f, d * 0.45) / d;
       return {
         dx: vx * pull * 0.7,
-        dy: vy * pull + Math.sin(f * Math.PI) * 2.5,
+        dy: vy * pull + Math.sin(f * Math.PI) * 2.4,
         prox: f
       };
     }
 
-    /* 2.1 #arbeiten: Topografische Konturwellen (sehr feiner Kontrast auf #FAFAF8) */
-    function drawWork(inst, t, px, py) {
-      var ctx = inst.ctx, w = inst.w, h = inst.h, s = inst.strength;
-      var spacing = w < 720 ? 52 : 44;
+    /* 2.1 #arbeiten: Sanfte topografische Konturwellen (einzelne klare Wellenfamilie) */
+    function drawWork(inst, t, px, py, s) {
+      var ctx = inst.ctx, w = inst.w, h = inst.h;
+      var spacing = w < 720 ? 52 : 46;
       var stepX = w < 720 ? 36 : 28;
       var rows = Math.ceil(h / spacing) + 1;
       var radius = 225;
 
-      /* Sekundäre Echo-Konturen (Höhenlinien-Anmutung) */
       ctx.beginPath();
       for (var r = 0; r < rows; r++) {
-        var by = 26 + r * spacing + 9;
-        var prevX = 0, prevY = 0;
+        var by = 26 + r * spacing;
+        var pX = 0, pY = 0;
         for (var x = 0; x <= w + stepX; x += stepX) {
           var xc = Math.min(w, x);
           var wy = by +
-            Math.sin(xc * 0.0036 + r * 0.58 + t * 0.34 + 0.45) * 10.5 +
-            Math.cos(xc * 0.0082 - r * 0.34 - t * 0.22) * 4.2;
-          var def = cursorDeflect(xc, wy, px, py, radius, 14, s);
+            Math.sin(xc * 0.0036 + r * 0.56 + t * 0.32) * 9.5 +
+            Math.cos(xc * 0.0080 - r * 0.32 - t * 0.20) * 3.8 +
+            Math.sin(xc * 0.0018 - r * 0.24 + t * 0.15) * 3.5;
+          var def = cursorDeflect(xc, wy, px, py, radius, 17, s);
           var fx = xc + def.dx;
           var fy = wy + def.dy;
           if (x === 0) ctx.moveTo(fx, fy);
-          else ctx.quadraticCurveTo(prevX, prevY, (prevX + fx) * 0.5, (prevY + fy) * 0.5);
-          prevX = fx; prevY = fy;
+          else ctx.quadraticCurveTo(pX, pY, (pX + fx) * 0.5, (pY + fy) * 0.5);
+          pX = fx; pY = fy;
         }
       }
-      ctx.lineWidth = 0.75;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.024)";
+      ctx.lineWidth = 0.95;
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.044)";
       ctx.stroke();
 
-      /* Primäre topografische Konturlinien */
-      ctx.beginPath();
-      for (var r2 = 0; r2 < rows; r2++) {
-        var by2 = 26 + r2 * spacing;
-        var pX = 0, pY = 0;
-        for (var x2 = 0; x2 <= w + stepX; x2 += stepX) {
-          var xc2 = Math.min(w, x2);
-          var wy2 = by2 +
-            Math.sin(xc2 * 0.0036 + r2 * 0.58 + t * 0.34) * 10.5 +
-            Math.cos(xc2 * 0.0082 - r2 * 0.34 - t * 0.22) * 4.2 +
-            Math.sin(xc2 * 0.0018 - r2 * 0.25 + t * 0.16) * 4.0;
-          var def2 = cursorDeflect(xc2, wy2, px, py, radius, 18, s);
-          var fx2 = xc2 + def2.dx;
-          var fy2 = wy2 + def2.dy;
-          if (x2 === 0) ctx.moveTo(fx2, fy2);
-          else ctx.quadraticCurveTo(pX, pY, (pX + fx2) * 0.5, (pY + fy2) * 0.5);
-          pX = fx2; pY = fy2;
-        }
-      }
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.048)";
-      ctx.stroke();
-
-      if (s > 0.02) {
+      if (s > 0.01) {
         var grad = ctx.createRadialGradient(px, py, 6, px, py, radius * 1.05);
-        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.095 * s).toFixed(3) + ")");
-        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.038 * s).toFixed(3) + ")");
+        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.09 * s).toFixed(3) + ")");
+        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.035 * s).toFixed(3) + ")");
         grad.addColorStop(1, "rgba(21, 23, 25, 0)");
-        ctx.lineWidth = 1.1;
+        ctx.lineWidth = 1.05;
         ctx.strokeStyle = grad;
         ctx.stroke();
       }
     }
 
-    /* 2.2 #preise: Strukturiertes Präzisions-Wellen-Raster (Ordnung, Klarheit, Präzision) */
-    function drawPricing(inst, t, px, py) {
-      var ctx = inst.ctx, w = inst.w, h = inst.h, s = inst.strength;
+    /* 2.2 #preise: Strukturiertes Präzisions-Wellen-Raster */
+    function drawPricing(inst, t, px, py, s) {
+      var ctx = inst.ctx, w = inst.w, h = inst.h;
       var colSpacing = w < 720 ? 96 : 116;
       var rowSpacing = w < 720 ? 50 : 44;
       var stepX = w < 720 ? 34 : 26;
       var stepY = 36;
       var radius = 220;
 
-      /* 1.Feine vertikale Struktur-Haarlinien */
       ctx.beginPath();
       var startColX = (w % colSpacing) * 0.5;
       for (var gx = startColX; gx < w; gx += colSpacing) {
@@ -519,10 +650,9 @@
         }
       }
       ctx.lineWidth = 0.8;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.025)";
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.024)";
       ctx.stroke();
 
-      /* 2. Geordnete, harmonische Horizontal-Wellen */
       var rows = Math.ceil(h / rowSpacing) + 1;
       ctx.beginPath();
       for (var r = 0; r < rows; r++) {
@@ -542,20 +672,19 @@
         }
       }
       ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.048)";
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.046)";
       ctx.stroke();
 
-      if (s > 0.02) {
+      if (s > 0.01) {
         var grad = ctx.createRadialGradient(px, py, 6, px, py, radius * 1.05);
-        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.095 * s).toFixed(3) + ")");
-        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.036 * s).toFixed(3) + ")");
+        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.092 * s).toFixed(3) + ")");
+        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.035 * s).toFixed(3) + ")");
         grad.addColorStop(1, "rgba(21, 23, 25, 0)");
         ctx.lineWidth = 1.1;
         ctx.strokeStyle = grad;
         ctx.stroke();
       }
 
-      /* 3. Feine Präzisions-Kreuzmarken (+) an ausgewählten Rasterknoten */
       ctx.beginPath();
       var nearTicks = [];
       for (var rTick = 1; rTick < rows; rTick += 2) {
@@ -572,15 +701,15 @@
           ctx.moveTo(cx, cy - 3);
           ctx.lineTo(cx, cy + 3);
           if (defT.prox > 0.08) {
-            nearTicks.push({ x: cx, y: cy, p: defT.prox });
+            nearTicks.push({ x: cx, y: cy });
           }
         }
       }
       ctx.lineWidth = 0.9;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.065)";
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.062)";
       ctx.stroke();
 
-      if (nearTicks.length) {
+      if (nearTicks.length && s > 0.01) {
         ctx.beginPath();
         for (var k = 0; k < nearTicks.length; k++) {
           var nt = nearTicks[k];
@@ -590,17 +719,16 @@
           ctx.lineTo(nt.x, nt.y + 3.5);
         }
         ctx.lineWidth = 1.1;
-        ctx.strokeStyle = "rgba(21, 23, 25, " + (0.16 * s).toFixed(3) + ")";
+        ctx.strokeStyle = "rgba(21, 23, 25, " + (0.155 * s).toFixed(3) + ")";
         ctx.stroke();
       }
     }
 
-    /* 2.3 #betreuung: Ruhiges technisches Radial- & Trägerwellen-Feld (Stabilität & Verlässlichkeit) */
-    function drawCare(inst, t, px, py) {
-      var ctx = inst.ctx, w = inst.w, h = inst.h, s = inst.strength;
+    /* 2.3 #betreuung: Ruhiges technisches Radial- & Trägerwellen-Feld */
+    function drawCare(inst, t, px, py, s) {
+      var ctx = inst.ctx, w = inst.w, h = inst.h;
       var radius = 215;
 
-      /* 1. Konzentrische technische Feld-Ellipsen um ein ruhiges Zentrum */
       var focusX = w * 0.5 + Math.sin(t * 0.22) * 32 + (px - w * 0.5) * 0.14 * s;
       var focusY = h * 0.52 + Math.cos(t * 0.18) * 20 + (py - h * 0.52) * 0.14 * s;
       var maxR = Math.max(w, h) * 0.62;
@@ -625,10 +753,9 @@
         }
       }
       ctx.lineWidth = 0.85;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.032)";
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.030)";
       ctx.stroke();
 
-      /* 2. Ruhige, verlässliche horizontale Trägerwellen */
       var rowSpacing = w < 720 ? 50 : 44;
       var stepX = w < 720 ? 34 : 26;
       var rows = Math.ceil(h / rowSpacing) + 1;
@@ -651,13 +778,13 @@
         }
       }
       ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(21, 23, 25, 0.044)";
+      ctx.strokeStyle = "rgba(21, 23, 25, 0.042)";
       ctx.stroke();
 
-      if (s > 0.02) {
+      if (s > 0.01) {
         var grad = ctx.createRadialGradient(px, py, 6, px, py, radius * 1.05);
-        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.09 * s).toFixed(3) + ")");
-        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.034 * s).toFixed(3) + ")");
+        grad.addColorStop(0, "rgba(21, 23, 25, " + (0.088 * s).toFixed(3) + ")");
+        grad.addColorStop(0.55, "rgba(21, 23, 25, " + (0.032 * s).toFixed(3) + ")");
         grad.addColorStop(1, "rgba(21, 23, 25, 0)");
         ctx.lineWidth = 1.1;
         ctx.strokeStyle = grad;
@@ -665,102 +792,68 @@
       }
     }
 
-    /* 2.4 #kontakt: Tiefes atmosphärisches Finale-Wellenfeld (Dunkler Studio-Abschluss) */
-    function drawContact(inst, t, px, py) {
-      var ctx = inst.ctx, w = inst.w, h = inst.h, s = inst.strength;
-      var spacing = w < 720 ? 42 : 36;
+    /* 2.4 #kontakt: Ruhiges, weiches Finale-Wellenfeld (konsolidiert, ohne doppelte Wellenebene) */
+    function drawContact(inst, t, px, py, s) {
+      var ctx = inst.ctx, w = inst.w, h = inst.h;
+      var spacing = w < 720 ? 50 : 44;
       var stepX = w < 720 ? 34 : 26;
       var rows = Math.ceil(h / spacing) + 1;
       var radius = 235;
 
-      /* Tiefe Hintergrund-Dünung */
+      /* Einzelne, fein abgestimmte Wellenfamilie (ruhiger & sanfter als im Hero) */
       ctx.beginPath();
-      for (var r = 0; r < rows; r += 2) {
-        var by = 22 + r * spacing + 12;
-        var prevX = 0, prevY = 0;
+      for (var r = 0; r < rows; r++) {
+        var by = 26 + r * spacing;
+        var pX = 0, pY = 0;
         for (var x = 0; x <= w + stepX; x += stepX) {
           var xc = Math.min(w, x);
           var wy = by +
-            Math.sin(xc * 0.0032 + r * 0.45 - t * 0.28) * 11.5 +
-            Math.cos(xc * 0.0070 - r * 0.30 + t * 0.20) * 4.5;
-          var def = cursorDeflect(xc, wy, px, py, radius * 1.15, 13, s);
+            Math.sin(xc * 0.0038 + r * 0.42 + t * 0.34) * 6.8 +
+            Math.cos(xc * 0.0086 - r * 0.24 - t * 0.22) * 2.6;
+          var def = cursorDeflect(xc, wy, px, py, radius, 18, s);
           var fx = xc + def.dx;
           var fy = wy + def.dy;
           if (x === 0) ctx.moveTo(fx, fy);
-          else ctx.quadraticCurveTo(prevX, prevY, (prevX + fx) * 0.5, (prevY + fy) * 0.5);
-          prevX = fx; prevY = fy;
+          else ctx.quadraticCurveTo(pX, pY, (pX + fx) * 0.5, (pY + fy) * 0.5);
+          pX = fx; pY = fy;
         }
       }
-      ctx.lineWidth = 1.15;
-      ctx.strokeStyle = "rgba(250, 250, 248, 0.028)";
+      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = "rgba(250, 250, 248, 0.044)";
       ctx.stroke();
 
-      /* Primäre atmosphärische Wellenlinien */
-      ctx.beginPath();
-      for (var r2 = 0; r2 < rows; r2++) {
-        var by2 = 22 + r2 * spacing;
-        var pX = 0, pY = 0;
-        for (var x2 = 0; x2 <= w + stepX; x2 += stepX) {
-          var xc2 = Math.min(w, x2);
-          var wy2 = by2 +
-            Math.sin(xc2 * 0.0042 + r2 * 0.40 + t * 0.40) * 7.5 +
-            Math.cos(xc2 * 0.0096 - r2 * 0.24 - t * 0.28) * 3.0;
-          var def2 = cursorDeflect(xc2, wy2, px, py, radius, 20, s);
-          var fx2 = xc2 + def2.dx;
-          var fy2 = wy2 + def2.dy;
-          if (x2 === 0) ctx.moveTo(fx2, fy2);
-          else ctx.quadraticCurveTo(pX, pY, (pX + fx2) * 0.5, (pY + fy2) * 0.5);
-          pX = fx2; pY = fy2;
-        }
-      }
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(250, 250, 248, 0.058)";
-      ctx.stroke();
-
-      if (s > 0.02) {
+      if (s > 0.008) {
         var grad = ctx.createRadialGradient(px, py, 8, px, py, radius * 1.06);
-        grad.addColorStop(0, "rgba(250, 250, 248, " + (0.135 * s).toFixed(3) + ")");
-        grad.addColorStop(0.5, "rgba(250, 250, 248, " + (0.05 * s).toFixed(3) + ")");
+        grad.addColorStop(0, "rgba(250, 250, 248, " + (0.11 * s).toFixed(3) + ")");
+        grad.addColorStop(0.5, "rgba(250, 250, 248, " + (0.042 * s).toFixed(3) + ")");
         grad.addColorStop(1, "rgba(250, 250, 248, 0)");
-        ctx.lineWidth = 1.15;
+        ctx.lineWidth = 1.05;
         ctx.strokeStyle = grad;
         ctx.stroke();
       }
     }
 
-    function drawSection(inst, timeSec) {
+    function drawSection(inst, now, timeSec) {
       if (!inst.w || !inst.h) return;
       var rect = inst.el.getBoundingClientRect();
       var flowT = reduceMotion ? 0 : timeSec;
 
-      updateSectionAtmosphere(inst.el, rect, flowT, inst.phase);
+      inst.glow.step(rect, now, flowT);
 
-      var inBounds = interactive && pointer.active &&
-        pointer.rawY >= rect.top - 90 &&
-        pointer.rawY <= rect.bottom + 90 &&
-        pointer.rawX >= rect.left - 40 &&
-        pointer.rawX <= rect.right + 40;
-
-      var targetStrength = inBounds ? 1 : 0;
-      inst.strength += (targetStrength - inst.strength) * 0.12;
-
-      if (inBounds) {
-        var tx = pointer.x - rect.left;
-        var ty = pointer.y - rect.top;
-        inst.lx += (tx - inst.lx) * 0.18;
-        inst.ly += (ty - inst.ly) * 0.18;
-      }
+      var px = inst.glow.localX;
+      var py = inst.glow.localY;
+      var s = inst.glow.cursorAlpha;
 
       inst.ctx.clearRect(0, 0, inst.w, inst.h);
 
       if (inst.mode === "work") {
-        drawWork(inst, flowT, inst.lx, inst.ly);
+        drawWork(inst, flowT, px, py, s);
       } else if (inst.mode === "pricing") {
-        drawPricing(inst, flowT, inst.lx, inst.ly);
+        drawPricing(inst, flowT, px, py, s);
       } else if (inst.mode === "care") {
-        drawCare(inst, flowT, inst.lx, inst.ly);
+        drawCare(inst, flowT, px, py, s);
       } else if (inst.mode === "contact") {
-        drawContact(inst, flowT, inst.lx, inst.ly);
+        drawContact(inst, flowT, px, py, s);
       }
     }
 
@@ -778,7 +871,7 @@
       var tSec = (now - t0) * 0.001;
       for (var i = 0; i < instances.length; i++) {
         if (instances[i].visible) {
-          drawSection(instances[i], tSec);
+          drawSection(instances[i], now, tSec);
         }
       }
       rafId = requestAnimationFrame(frame);
@@ -831,13 +924,14 @@
 
     if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(function (entries) {
+        var now = performance.now();
         for (var e = 0; e < entries.length; e++) {
           var target = entries[e].target;
           for (var j = 0; j < instances.length; j++) {
             if (instances[j].el === target) {
               instances[j].visible = entries[e].isIntersecting;
               if (instances[j].visible && reduceMotion) {
-                drawSection(instances[j], 0);
+                drawSection(instances[j], now, 0);
               }
             }
           }
@@ -861,16 +955,45 @@
   })();
 
   /* ======================================================================
-     3) 3D-Neigung der Portfolio-Vorschauen (Klicks vollständig bewahrt)
-     Listener liegen auf dem <a class="project__link">; die Referenz-Box wird
-     aus dem untransformierten Anker gelesen, sodass die 3D-Neigung niemals
-     den Hit-Test unter dem Mauszeiger verschiebt oder Klicks abfängt.
+     3) 3D-Neigung & Kinematischer Fokus der Portfolio-Vorschauen (.project)
+     Listener liegen auf dem <a class="project__link">; bei Hover oder
+     Tastaturfokus (.is-focused) wird die aktive Karte gestochen scharf
+     hervorgehoben, während die Geschwisterkarten sanft in den Hintergrund
+     treten (ohne Flackern beim direkten Wechsel zwischen Karten).
      ====================================================================== */
   (function tilt() {
     if (!interactive) return;
     var MAX_DEG = 5, SCALE = 1.024;
+    var workSection = document.getElementById("arbeiten");
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".project"));
+    var focusClearTimer = 0;
 
-    Array.prototype.forEach.call(document.querySelectorAll(".project"), function (card) {
+    function activateFocus(activeCard) {
+      clearTimeout(focusClearTimer);
+      for (var i = 0; i < cards.length; i++) {
+        cards[i].classList.toggle("is-focused", cards[i] === activeCard);
+      }
+      if (workSection) workSection.classList.add("has-focus-project");
+    }
+
+    function scheduleClearFocus(leavingCard) {
+      clearTimeout(focusClearTimer);
+      focusClearTimer = setTimeout(function () {
+        if (leavingCard) leavingCard.classList.remove("is-focused");
+        var anyFocused = false;
+        for (var i = 0; i < cards.length; i++) {
+          if (cards[i].classList.contains("is-focused")) {
+            anyFocused = true;
+            break;
+          }
+        }
+        if (!anyFocused && workSection) {
+          workSection.classList.remove("has-focus-project");
+        }
+      }, 32);
+    }
+
+    cards.forEach(function (card) {
       var link = card.querySelector(".project__link");
       var media = card.querySelector(".project__media");
       if (!link || !media) return;
@@ -897,33 +1020,42 @@
         media.style.setProperty("--gx", (nx * 100).toFixed(1) + "%");
         media.style.setProperty("--gy", (ny * 100).toFixed(1) + "%");
       }
+
       function reset() {
         if (raf) { cancelAnimationFrame(raf); raf = 0; }
         card.classList.remove("is-tilting");
         media.style.setProperty("--rx", "0deg");
         media.style.setProperty("--ry", "0deg");
         media.style.setProperty("--s", 1);
+        scheduleClearFocus(card);
       }
 
       link.addEventListener("pointerenter", function (e) {
         if (e.pointerType !== "mouse") return;
         card.classList.add("is-tilting");
+        activateFocus(card);
       });
       link.addEventListener("pointermove", function (e) {
         if (e.pointerType !== "mouse") return;
         card.classList.add("is-tilting");
+        activateFocus(card);
         cx = e.clientX; cy = e.clientY;
         if (!raf) raf = requestAnimationFrame(apply);
       }, { passive: true });
       link.addEventListener("pointerleave", reset);
+
+      /* Tastatur-Fokus für barrierefreie Hervorhebung */
+      link.addEventListener("focus", function () {
+        activateFocus(card);
+      });
+      link.addEventListener("blur", function () {
+        scheduleClearFocus(card);
+      });
     });
   })();
 
   /* ======================================================================
      4) Zeigerabhängige Beleuchtung & feine Magnetik für Karten & Buttons
-     Aktualisiert --mx / --my für das weichgezeichnete Halo hinter der Karte
-     sowie den feinen Oberflächenglanz und eine subtile Button-Reaktion,
-     ohne Text oder Klicks zu beeinflussen.
      ====================================================================== */
   (function cardGlow() {
     if (!interactive) return;
@@ -959,11 +1091,13 @@
   })();
 
   /* ======================================================================
-     5) Interaktive Typografie (Wort-Hover für Haupt-Slogans, Buchstaben-Hover
-        für statischen Fließ- und Oberflächentext)
-     Nutzt Intl.Segmenter für korrekte Unicode-Grapheme, bewahrt Zeilenumbruch
-     durch Wort-Wrapper (.t-w), erhält arabische Ligaturen (Wort-Level) und
-     unterstützt chinesische Wort-/Zeichen-Segmentierung ohne JS-Hover-Listener.
+     5) Interaktive Typografie + Delegierter Nachbar-Unterstreichungs-Effekt
+        - Große Überschriften (data-typo="words"): Wort-Skalierung (.t-word)
+        - Kleinerer Text (Standard): Buchstaben-Skalierung (.t-ch) + sanfte
+          Unterstreichung der direkten (±1: .is-u1) und zweiten (±2: .is-u2)
+          Nachbarbuchstaben.
+        - Arabisch: verbundene Wort-Einheiten (.t-w--hover) zur Wahrung der
+          Ligaturen mit Wort-Nachbarschafts-Unterstreichung.
      ====================================================================== */
   (function typography() {
     if (!interactive) return;
@@ -987,7 +1121,6 @@
       if (zhWordSeg) {
         var raw = [], it = zhWordSeg.segment(str)[Symbol.iterator](), step;
         while (!(step = it.next()).done) raw.push(step.value);
-        /* Satzzeichen direkt an das vorangehende Wort binden, damit sie nie isoliert umbrechen */
         var merged = [];
         for (var i = 0; i < raw.length; i++) {
           var seg = raw[i].segment;
@@ -1024,6 +1157,76 @@
       return document.documentElement.getAttribute("lang") || "de";
     }
 
+    /* Speichert die aktuell unterstrichenen Nachbar-Spans (max. 4 Knoten) für O(1)-Bereinigung */
+    var activeNeighbors = [];
+    var currentHoveredUnit = null;
+
+    function clearNeighborUnderlines() {
+      for (var i = 0; i < activeNeighbors.length; i++) {
+        var n = activeNeighbors[i];
+        n.classList.remove("is-u1", "is-u2", "is-u-left", "is-u-right");
+      }
+      activeNeighbors.length = 0;
+      currentHoveredUnit = null;
+    }
+
+    function activateNeighborUnderlines(unit) {
+      if (unit === currentHoveredUnit) return;
+      clearNeighborUnderlines();
+      if (!unit || !unit._uList) return;
+      currentHoveredUnit = unit;
+      var list = unit._uList;
+      var idx = unit._uIdx;
+
+      if (idx - 1 >= 0) {
+        var l1 = list[idx - 1];
+        l1.classList.add("is-u1", "is-u-left");
+        activeNeighbors.push(l1);
+      }
+      if (idx + 1 < list.length) {
+        var r1 = list[idx + 1];
+        r1.classList.add("is-u1", "is-u-right");
+        activeNeighbors.push(r1);
+      }
+      if (idx - 2 >= 0) {
+        var l2 = list[idx - 2];
+        l2.classList.add("is-u2", "is-u-left");
+        activeNeighbors.push(l2);
+      }
+      if (idx + 2 < list.length) {
+        var r2 = list[idx + 2];
+        r2.classList.add("is-u2", "is-u-right");
+        activeNeighbors.push(r2);
+      }
+    }
+
+    /* Einziger delegierter Listener für den gesamten Dokumentbaum */
+    document.addEventListener("pointerover", function (e) {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+      var t = e.target;
+      if (t && t._uList) {
+        activateNeighborUnderlines(t);
+      } else if (currentHoveredUnit) {
+        clearNeighborUnderlines();
+      }
+    }, { passive: true });
+
+    document.addEventListener("pointerout", function (e) {
+      if (!currentHoveredUnit) return;
+      var rel = e.relatedTarget;
+      if (!rel || !rel._uList) {
+        clearNeighborUnderlines();
+      }
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", clearNeighborUnderlines);
+
+    function registerUnit(span, list) {
+      span._uList = list;
+      span._uIdx = list.length;
+      list.push(span);
+    }
+
     function segmentTextNode(node, mode) {
       var raw = node.nodeValue;
       if (!raw || !/\S/.test(raw)) return;
@@ -1054,7 +1257,9 @@
         return;
       }
 
-      /* 2. Chinesischer Fließtext: Einzelzeichen-Hover ohne nowrap-Blockade */
+      var units = [];
+
+      /* 2. Chinesischer Fließtext: Einzelzeichen-Hover + Nachbar-Unterstreichung */
       if (isCjk && mode !== "words") {
         var cjkChars = toGraphemes(raw);
         for (var k = 0; k < cjkChars.length; k++) {
@@ -1065,6 +1270,7 @@
             var cs = document.createElement("span");
             cs.className = "t-ch";
             cs.textContent = g;
+            registerUnit(cs, units);
             segWrap.appendChild(cs);
           }
         }
@@ -1086,12 +1292,12 @@
           w.textContent = p;
           segWrap.appendChild(w);
         } else if (isArabic || arabicRe.test(p)) {
-          /* Arabisch: Wort als verbundene Einheit animieren, damit Buchstabenformen
-             und Ligaturen niemals durch Einzel-Spans unterbrochen werden */
+          /* Arabisch: Wort als verbundene Einheit animieren (Ligaturen geschützt) */
           var aw = document.createElement("span");
           aw.className = "t-w t-w--hover";
           aw.setAttribute("data-typo-done", "1");
           aw.textContent = p;
+          registerUnit(aw, units);
           segWrap.appendChild(aw);
         } else {
           var wWrap = document.createElement("span");
@@ -1106,6 +1312,7 @@
               var s = document.createElement("span");
               s.className = "t-ch";
               s.textContent = ch;
+              registerUnit(s, units);
               wWrap.appendChild(s);
             }
           }
@@ -1134,11 +1341,13 @@
 
     window.SFY_TYPO_ENHANCE = function (el) {
       if (!el) return;
+      clearNeighborUnderlines();
       var mode = (el.closest && el.closest('[data-typo="words"]')) ? "words" : "chars";
       enhanceTree(el, mode);
     };
 
     window.SFY_TYPO_REBUILD = function () {
+      clearNeighborUnderlines();
       enhanceTree(document.body, "chars");
     };
 

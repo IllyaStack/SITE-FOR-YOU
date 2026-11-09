@@ -14,6 +14,7 @@
   --max: 1240px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --header-h: 64px;
+  --contact-sticky-top: calc(var(--header-h) + 32px);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -21,7 +22,7 @@ html { scroll-behavior: smooth; scroll-padding-top: var(--header-h); -webkit-tex
 body {
   margin: 0; background: var(--light); color: var(--dark);
   font-family: var(--font); font-size: 1rem; line-height: 1.6;
-  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden; overflow-x: clip;
 }
 h1, h2, h3, p, ul { margin: 0; padding: 0; }
 ul { list-style: none; }
@@ -146,16 +147,16 @@ img { max-width: 100%; display: block; }
 .btn[disabled] { opacity: .6; cursor: progress; }
 
 /* ---------- Hero ---------- */
-.hero { position: relative; overflow: hidden; background: var(--dark); color: var(--light); min-height: 100vh; min-height: 100svh; display: flex; }
+.hero { position: relative; overflow: hidden; overflow: clip; background: var(--dark); color: var(--light); min-height: 100vh; min-height: 100svh; display: flex; }
 .hero::before {
   content: ""; position: absolute; pointer-events: none; z-index: 0;
   width: min(820px, 92vw); height: min(560px, 76vw);
-  left: var(--atmo-x, 54%); top: var(--atmo-y, 44%);
+  left: var(--atmo-x, 50%); top: var(--atmo-y, 42%);
   transform: translate3d(-50%, -50%, 0);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(250, 250, 248, .052) 0%, rgba(250, 250, 248, .016) 44%, rgba(250, 250, 248, 0) 72%);
-  filter: blur(60px); opacity: .95;
-  transition: opacity .5s var(--ease);
+  filter: blur(60px);
+  opacity: calc(.95 * var(--atmo-alpha, 1));
 }
 .hero__fx,
 .sec-fx {
@@ -179,20 +180,22 @@ img { max-width: 100%; display: block; }
 /* ---------- Sections & Atmosphärischer Hintergrund-Blur ----------
    Ebene 0 (Hintergrund-Licht): weichgezeichnete monochrome Lichtfelder (::before, z-index: 0).
    Ebene 1 (Vektor-/Kontur-Feld): .sec-fx Canvas (z-index: 1, pointer-events: none).
-   Ebene 2 (Inhalt): .wrap (z-index: 2) – immer gestochen scharf, niemals geblurrt. */
-.section { position: relative; overflow: hidden; padding-block: clamp(72px, 12vw, 160px); }
+   Ebene 2 (Inhalt): .wrap (z-index: 2) – immer gestochen scharf, niemals geblurrt.
+   WICHTIG: overflow: clip schneidet dekorative Hintergrund-Blurs sauber ab, ohne einen
+   Scroll-Container zu erzeugen, sodass position: sticky relativ zum Viewport funktioniert. */
+.section { position: relative; overflow: hidden; overflow: clip; padding-block: clamp(72px, 12vw, 160px); }
 .section--alt { background: var(--light-2); }
 .section::before,
 .contact::before {
   content: ""; position: absolute; pointer-events: none; z-index: 0;
   width: min(740px, 88vw); height: min(480px, 68vw);
   left: var(--atmo-x, 50%); top: var(--atmo-y, 42%);
-  transform: translate3d(-50%, calc(-50% + var(--py, 0px) * 1.6), 0);
+  transform: translate3d(-50%, -50%, 0);
   border-radius: 50%;
   background:
     radial-gradient(circle, rgba(255, 255, 255, .86) 0%, rgba(255, 255, 255, .35) 42%, rgba(255, 255, 255, 0) 72%);
-  filter: blur(48px); opacity: .78;
-  transition: opacity .5s var(--ease);
+  filter: blur(48px);
+  opacity: calc(.78 * var(--atmo-alpha, 1));
 }
 #arbeiten.section::before {
   background:
@@ -210,7 +213,8 @@ img { max-width: 100%; display: block; }
   width: min(820px, 92vw); height: min(540px, 74vw);
   background:
     radial-gradient(circle, rgba(250, 250, 248, .068) 0%, rgba(250, 250, 248, .022) 45%, rgba(250, 250, 248, 0) 72%);
-  filter: blur(58px); opacity: .92;
+  filter: blur(58px);
+  opacity: calc(.92 * var(--atmo-alpha, 1));
 }
 .contact::after {
   content: ""; position: absolute; pointer-events: none; z-index: 0;
@@ -221,12 +225,20 @@ img { max-width: 100%; display: block; }
   filter: blur(54px);
 }
 .section__head {
-  margin-bottom: clamp(32px, 5vw, 64px); display: grid; gap: 14px;
-  transform: translate3d(0, var(--py, 0px), 0);
+  margin-bottom: clamp(32px, 5vw, 64px);
+  display: block;
+  position: relative;
+}
+.section__head-in {
+  display: grid;
+  gap: 14px;
 }
 #preise .section__head,
 #betreuung .section__head {
   margin-bottom: clamp(20px, 2.8vw, 32px);
+}
+#preise .section__head-in,
+#betreuung .section__head-in {
   gap: 10px;
 }
 h2 { font-size: clamp(2rem, 6.5vw, 4rem); line-height: 1.04; letter-spacing: -.035em; font-weight: 700; }
@@ -235,7 +247,37 @@ h2 { font-size: clamp(2rem, 6.5vw, 4rem); line-height: 1.04; letter-spacing: -.0
 
 /* ---------- Work (Portfolio) ---------- */
 .work { display: grid; gap: 40px 24px; }
-.project { position: relative; }
+.project {
+  position: relative;
+  transition:
+    filter .38s var(--ease),
+    opacity .38s var(--ease),
+    transform .38s var(--ease);
+}
+#arbeiten > .sec-fx,
+#arbeiten .note {
+  transition:
+    filter .38s var(--ease),
+    opacity .38s var(--ease);
+}
+/* Keyboard-Fokus-Unterstützung für kinematischen Portfolio-Fokus */
+#arbeiten.has-focus-project .project:not(.is-focused) {
+  filter: blur(2.5px);
+  opacity: .58;
+  transform: scale(.992);
+}
+#arbeiten.has-focus-project .project.is-focused {
+  filter: none;
+  opacity: 1;
+  z-index: 3;
+}
+#arbeiten.has-focus-project > .sec-fx {
+  opacity: .55;
+}
+#arbeiten.has-focus-project .note {
+  filter: blur(1.5px);
+  opacity: .55;
+}
 .project__link { display: block; text-decoration: none; position: relative; cursor: pointer; }
 .project__link:focus-visible { outline: 2px solid var(--dark); outline-offset: 6px; border-radius: 6px; }
 .project__media {
@@ -379,9 +421,10 @@ h2 { font-size: clamp(2rem, 6.5vw, 4rem); line-height: 1.04; letter-spacing: -.0
 .stack { display: grid; gap: 18px; padding-block: 2px; }
 
 /* ---------- Contact ---------- */
-.contact { position: relative; overflow: hidden; background: var(--dark); color: var(--light); padding-block: clamp(72px, 12vw, 160px); color-scheme: dark; }
+.contact { position: relative; overflow: hidden; overflow: clip; background: var(--dark); color: var(--light); padding-block: clamp(72px, 12vw, 160px); color-scheme: dark; }
 .contact__in { display: grid; gap: 40px; }
-.contact__intro { display: grid; gap: 20px; align-content: start; }
+.contact__intro { position: relative; min-width: 0; }
+.contact__sticky { display: grid; gap: 20px; align-content: start; }
 .contact__intro p { font-size: 1.125rem; color: rgba(250, 250, 248, .78); max-width: 26em; }
 .contact__fallback { font-size: .9375rem !important; color: var(--muted) !important; }
 .contact__fallback a { color: var(--light); }
@@ -556,7 +599,7 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
 .footer nav a:hover { color: var(--light); }
 
 /* ---------- Legal pages ---------- */
-.legal { position: relative; overflow: hidden; padding: calc(var(--header-h) + 56px) 0 96px; min-height: 80vh; }
+.legal { position: relative; overflow: hidden; overflow: clip; padding: calc(var(--header-h) + 56px) 0 96px; min-height: 80vh; }
 .legal .wrap { max-width: 760px; }
 .legal h1 { font-size: clamp(2.25rem, 8vw, 4rem); letter-spacing: -.04em; line-height: 1; margin-bottom: 32px; }
 .legal h2 { font-size: 1.25rem; letter-spacing: -.01em; margin: 32px 0 8px; }
@@ -570,7 +613,32 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
 /* ---------- Motion ---------- */
 .js .reveal { opacity: 0; transform: translateY(20px); transition: opacity .72s var(--ease), transform .72s var(--ease); }
 .js .reveal.is-in { opacity: 1; transform: none; }
-/* Sobald Preiskarten oder Betreuungskarten sichtbar sind, nutzt transform die schnelle Hover-Dauer (300 ms) */
+/* Äußere Sticky-Spuren (.section__head & .contact__intro) bleiben immer frei von transform,
+   damit das innere Sticky-Element (.section__head-in & .contact__sticky) sauber am Viewport haftet */
+.js .section__head.reveal,
+.js .contact__intro.reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.js .section__head.reveal > .section__head-in,
+.js .contact__intro.reveal > .contact__sticky {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .72s var(--ease), transform .72s var(--ease);
+}
+.js .section__head.reveal.is-in > .section__head-in,
+.js .contact__intro.reveal.is-in > .contact__sticky {
+  opacity: 1;
+  transform: none;
+}
+/* Sobald Portfolio-, Preis- oder Betreuungskarten sichtbar sind, nutzen sie ihre schnellen Interaktions-Übergänge */
+.js .project.reveal.is-in {
+  transition:
+    filter .38s var(--ease),
+    opacity .38s var(--ease),
+    transform .38s var(--ease);
+}
 .js .plan.reveal.is-in,
 .js .care__item.reveal.is-in {
   transition:
@@ -604,7 +672,7 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
 @keyframes rise { to { transform: none; } }
 @keyframes fade { to { opacity: 1; } }
 
-/* ---------- Interaktive Typografie (Wort- & Buchstaben-Hover) ---------- */
+/* ---------- Interaktive Typografie (Wort- & Buchstaben-Hover + Nachbar-Unterstreichung) ---------- */
 .t-word {
   display: inline-block;
   transform-origin: 50% 62%;
@@ -615,21 +683,59 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
   white-space: nowrap;
 }
 .t-w--hover {
+  position: relative;
   transform-origin: 50% 62%;
   transition: transform .21s var(--ease);
 }
 .t-ch {
+  position: relative;
   display: inline-block;
   transform-origin: 50% 62%;
   transition: transform .21s var(--ease);
+}
+.t-ch::after,
+.t-w--hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: .05em;
+  height: 1px;
+  border-radius: 1px;
+  background-color: currentColor;
+  opacity: var(--u-alpha, 0);
+  transform: scaleX(var(--u-scale, 0));
+  transform-origin: var(--u-origin, 50% 50%);
+  pointer-events: none;
+  transition:
+    transform .22s var(--ease),
+    opacity .22s var(--ease);
+}
+.t-ch.is-u-left::after,
+.t-w--hover.is-u-left::after {
+  --u-origin: 100% 50%;
+}
+.t-ch.is-u-right::after,
+.t-w--hover.is-u-right::after {
+  --u-origin: 0% 50%;
+}
+.t-ch.is-u1::after,
+.t-w--hover.is-u1::after {
+  --u-alpha: .58;
+  --u-scale: .94;
+}
+.t-ch.is-u2::after,
+.t-w--hover.is-u2::after {
+  --u-alpha: .28;
+  --u-scale: .64;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; }
-  .js .reveal, .js .form-seq > .seq-item { opacity: 1; transform: none; }
-  .project__media, .section__head, .plan, .care__item, .t-word, .t-w--hover, .t-ch { transform: none !important; }
-  .project__glare, .depth-veil, .hero::before, .section::before, .contact::before, .contact::after, .plan::before, .plan::after, .care__item::before, .care__item::after, .summary::before, .rc::before { display: none; }
+  .js .reveal, .js .section__head.reveal > .section__head-in, .js .contact__intro.reveal > .contact__sticky, .js .form-seq > .seq-item { opacity: 1; transform: none; }
+  .project, .project__media, .section__head, .plan, .care__item, .t-word, .t-w--hover, .t-ch { transform: none !important; filter: none !important; opacity: 1 !important; }
+  .project__glare, .depth-veil, .hero::before, .section::before, .contact::before, .contact::after, .plan::before, .plan::after, .care__item::before, .care__item::after, .summary::before, .rc::before, .t-ch::after, .t-w--hover::after { display: none; }
 }
 
 /* ---------- Hover-Interaktionen (nur auf Geräten mit präzisem Zeiger) ---------- */
@@ -672,6 +778,26 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
   .btn:hover .arrow--right { transform: translateX(3px); }
 
   .project.is-live .project__link:hover .project__media { border-color: rgba(21, 23, 25, .38); }
+
+  /* 4. Portfolio Demos — Kinematischer Fokus bei Hover */
+  .work:has(.project__link:hover, .project__link:focus-visible) .project:not(:hover):not(:focus-within) {
+    filter: blur(2.5px);
+    opacity: .58;
+    transform: scale(.992);
+  }
+  .work .project:hover,
+  .work .project:focus-within {
+    filter: none;
+    opacity: 1;
+    z-index: 3;
+  }
+  #arbeiten:has(.project__link:hover, .project__link:focus-visible) > .sec-fx {
+    opacity: .55;
+  }
+  #arbeiten:has(.project__link:hover, .project__link:focus-visible) .note {
+    filter: blur(1.5px);
+    opacity: .55;
+  }
 
   /* 1. Pricing Cards Hover: scale 1.012, -4px lift, dezenter Rahmen & Hintergrund, diffuses Halo dahinter */
   .js .plan.reveal.is-in:hover,
@@ -795,7 +921,7 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
   .lang__btn { padding: 0 10px; font-size: .78rem; }
 }
 
-/* ---------- Larger screens ---------- */
+/* ---------- Larger screens & Sticky Section System ---------- */
 @media (min-width: 720px) {
   :root { --header-h: 76px; }
   .header__actions { gap: 10px; }
@@ -808,8 +934,80 @@ input:autofill { box-shadow: 0 0 0 1000px var(--dark) inset; -webkit-text-fill-c
   .care__item { padding: 36px; }
 }
 
+@media (min-width: 900px) {
+  /* Kontakt-Sektion: zweispaltiges Layout mit vertikal mitscrollender linker Einführungsspalte */
+  .contact__in {
+    grid-template-columns: minmax(280px, 5fr) minmax(0, 6fr);
+    gap: clamp(48px, 6.5vw, 96px);
+    align-items: stretch;
+  }
+  .contact__intro {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .contact__sticky {
+    position: sticky;
+    top: var(--contact-sticky-top, calc(var(--header-h) + 32px));
+    align-self: stretch;
+  }
+  .contact__sticky.is-sticky-disabled {
+    position: static;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 680px) {
+  /* Kompaktere Desktop-Höhen (z. B. 600 px): Überschrift, Einleitung & E-Mail bequem lesbar halten */
+  .contact__sticky {
+    gap: 14px;
+  }
+  .contact__sticky h2 {
+    font-size: clamp(2rem, 4.2vw, 3.1rem);
+  }
+  .contact__sticky p {
+    font-size: 1.025rem;
+  }
+}
+
+@media (min-width: 900px) and (min-height: 700px) {
+  /* Ausgewählte Arbeiten: sanftes Mitgleiten der Abschnittsüberschrift im oberen Pufferbereich,
+     ohne jemals Portfolio-Karten zu verdecken (40px Sticky-Weg in ::after + 24px Mindestabstand = 64px) */
+  #arbeiten .section__head {
+    margin-bottom: clamp(16px, 2vw, 24px);
+  }
+  #arbeiten .section__head::after {
+    content: "";
+    display: block;
+    height: clamp(24px, 3.2vw, 40px);
+    pointer-events: none;
+  }
+  #arbeiten .section__head-in {
+    position: sticky;
+    top: calc(var(--header-h) + 14px);
+  }
+}
+
 @media (min-width: 980px) {
   .plans { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .contact__in { grid-template-columns: 5fr 6fr; gap: 96px; }
-  .contact__intro { position: sticky; top: calc(var(--header-h) + 24px); align-self: start; }
+}
+
+@media (min-width: 980px) and (min-height: 760px) {
+  /* Preise & Website-Betreuung: dezentes Mitgleiten im natürlichen Kopfbereich-Abstand
+     ohne Veränderung der Gesamthöhe (18px Sticky-Weg in ::after + 14px Mindestabstand = 32px) */
+  #preise .section__head,
+  #betreuung .section__head {
+    margin-bottom: 14px;
+  }
+  #preise .section__head::after,
+  #betreuung .section__head::after {
+    content: "";
+    display: block;
+    height: 18px;
+    pointer-events: none;
+  }
+  #preise .section__head-in,
+  #betreuung .section__head-in {
+    position: sticky;
+    top: calc(var(--header-h) + 10px);
+  }
 }
